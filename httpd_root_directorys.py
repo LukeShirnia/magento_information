@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 
 def website_configuration(webserver_config):
         global config_files
@@ -11,12 +12,10 @@ def website_configuration(webserver_config):
 
 def document_root(files_to_search):
         DocRoots=[]
+        pattern = re.compile("^\s*documentroot")
         for i in files_to_search:
                 with open(i, "r") as search_file:
                         for line in search_file:
-                                if 'documentroot' in line.lower():
+                                if pattern.match(line.lower()):
                                         DocRoots.append(line)
         for print_doc_root in DocRoots: print print_doc_root
-
-website_configuration("/etc/httpd/conf.d/")
-document_root(config_files)
