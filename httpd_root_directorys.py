@@ -19,3 +19,6 @@ def document_root(files_to_search):
                                 if pattern.match(line.lower()):
                                         DocRoots.append(line)
         for print_doc_root in DocRoots: print print_doc_root
+
+website_configuration("/etc/httpd/conf.d/")
+document_root(config_files)
