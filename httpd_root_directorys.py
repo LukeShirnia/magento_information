@@ -11,6 +11,7 @@ def website_configuration(webserver_config):
                                 config_files.append(os.path.join(root, file))
 
 def document_root(files_to_search):
+        global DocRoots
         DocRoots=[]
         pattern = re.compile("^\s*documentroot")
         for i in files_to_search:
@@ -18,6 +19,7 @@ def document_root(files_to_search):
                         for line in search_file:
                                 if pattern.match(line.lower()):
                                         DocRoots.append(line)
+                                        DocRoots = [x.replace(' ','') for x in DocRoots]
         for print_doc_root in DocRoots: print print_doc_root
 
 website_configuration("/etc/httpd/conf.d/")
