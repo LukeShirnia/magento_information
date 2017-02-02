@@ -14,7 +14,7 @@ def document_root(files_to_search):
         for i in files_to_search:
                 with open(i, "r") as search_file:
                         for line in search_file:
-                                if 'DocumentRoot' in line:
+                                if 'documentroot' in line.lower():
                                         DocRoots.append(line)
         for print_doc_root in DocRoots: print print_doc_root
 
