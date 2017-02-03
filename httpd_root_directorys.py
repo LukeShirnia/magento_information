@@ -2,8 +2,6 @@ import os
 import sys
 import re
 
-import re
-
 def http_includes():
 	config_directory=[]
 	server_root=[]
