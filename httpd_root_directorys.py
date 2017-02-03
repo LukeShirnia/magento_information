@@ -10,6 +10,7 @@ def http_includes():
 	with open("/etc/httpd/conf/httpd.conf", "r") as search_file:
 		for line in search_file:
 	        	if include.match(line.lower()):
+                                line = line.split(" ")[1]
 				config_directory.append(line)
 			if serverroot.match(line.lower()):
 				server_root.append(line)
