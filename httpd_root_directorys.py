@@ -6,12 +6,19 @@ import re
 
 def http_includes():
 	config_directory=[]
+	server_root=[]
 	include = re.compile("^\s*include")
+	serverroot = re.compile("^\s*serverroot")
 	with open("/etc/httpd/conf/httpd.conf", "r") as search_file:
 		for line in search_file:
 	        	if include.match(line.lower()):
 				config_directory.append(line)
+			if serverroot.match(line.lower()):
+				server_root.append(line)
+				server_root = [x.replace("ServerRoot", "") for x in server_root]
 		for i in config_directory: print i
+		server_root = server_root[0]
+		server_root = server_root.translate(None, '"')
 			
 def website_configuration(webserver_config, config_suffix):
         global config_files
