@@ -13,9 +13,6 @@ def http_includes():
 				config_directory.append(line)
 		for i in config_directory: print i
 
-http_includes()
-
-
 def website_configuration(webserver_config):
         global config_files
         config_files=[]
