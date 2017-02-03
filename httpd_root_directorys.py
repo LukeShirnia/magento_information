@@ -2,6 +2,20 @@ import os
 import sys
 import re
 
+import re
+
+def http_includes():
+	config_directory=[]
+	include = re.compile("^\s*include")
+	with open("/etc/httpd/conf/httpd.conf", "r") as search_file:
+		for line in search_file:
+	        	if include.match(line.lower()):
+				config_directory.append(line)
+		for i in config_directory: print i
+
+http_includes()
+
+
 def website_configuration(webserver_config):
         global config_files
         config_files=[]
