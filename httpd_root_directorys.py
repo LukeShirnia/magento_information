@@ -28,20 +28,20 @@ def http_includes():
                                 server_root = [x.replace("ServerRoot", "") for x in server_root]
 
 def http_vhost_directory_fullpath(file_root, docs_directory):
-	global vhost_directory_path
- 	PATH = []
-	vhost_direcory_path=[]
+        global vhost_directory_path
+        PATH = []
+        vhost_directory_path=[]
 
-	for i in docs_directory:
-        	# since file_root can be an array, use copy to grab a copy 
-        	# of the array
-        	args = copy.copy(file_root)
-        	args.append(i)
-        	# and stick `i` on the end of that array so
-        	# that we have our full param list for os.path.join
-        	PATH = os.path.join(*args)
-        	vhost_directory_path.append(PATH)
-		
+        for i in docs_directory:
+                # since file_root can be an array, use copy to grab a copy
+                # of the array
+                args = copy.copy(file_root)
+                args.append(i)
+                # and stick `i` on the end of that array so
+                # that we have our full param list for os.path.join
+                PATH = os.path.join(*args)
+                vhost_directory_path.append(PATH)
+
 def website_configuration(webserver_config, config_suffix):
         global config_files
         config_files=[]
@@ -60,9 +60,11 @@ def document_root(files_to_search):
                                 if pattern.match(line.lower()):
                                         DocRoots.append(line)
                                         DocRoots = [x.replace(' ','') for x in DocRoots]
-        for print_doc_root in DocRoots: print print_doc_root
+#        for print_doc_root in DocRoots: print print_doc_root #print document roots found in vhosts
 
 website_configuration("/etc/httpd/conf.d/", ".conf")
 document_root(config_files)
+http_includes()
 http_vhost_directory_fullpath(server_root, config_directory)
-print vhost_directory_path[0]
+
+print vhost_directory_path[0] #testing the array works
