@@ -3,7 +3,14 @@ import sys
 import re
 import copy
 
-def http_includes():
+def website_configuration(webserver_config, config_suffix):
+        global config_files
+        config_files=[]
+        for root, dirs, files in os.walk(webserver_config):
+                for file in files:
+                        if file.endswith(config_suffix):
+                                config_files.append(os.path.join(root, file))
+def get_http_includes():
         global server_root, config_directory
         config_directory=[]
         server_root=[]
@@ -42,13 +49,7 @@ def http_vhost_directory_fullpath(file_root, docs_directory):
                 PATH = os.path.join(*args)
                 vhost_directory_path.append(PATH)
 
-def website_configuration(webserver_config, config_suffix):
-        global config_files
-        config_files=[]
-        for root, dirs, files in os.walk(webserver_config):
-                for file in files:
-                        if file.endswith(config_suffix):
-                                config_files.append(os.path.join(root, file))
+
 
 def document_root(files_to_search):
         global DocRoots
@@ -64,7 +65,7 @@ def document_root(files_to_search):
 
 website_configuration("/etc/httpd/conf.d/", ".conf")
 document_root(config_files)
-http_includes()
+get_http_includes()
 http_vhost_directory_fullpath(server_root, config_directory)
 
 print vhost_directory_path[0] #testing the array works
