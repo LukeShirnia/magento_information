@@ -3,8 +3,7 @@ import sys
 import re
 import copy
 
-# /etc/httpd
-# conf.d/
+# This function finds the SERVERROOT for apache and then any potential INCLUDES for vhost locations
 def get_http_includes():
         global server_root, config_directory, SUFFIX
         config_directory = []
@@ -29,17 +28,7 @@ def get_http_includes():
                                 server_root.append(line)
                                 server_root = [x.replace("ServerRoot", "") for x in server_root]
 
-# finding all config files ending with suffix .conf in the include directories
-def website_configuration(webserver_config, config_suffix):
-        global config_files
-        config_files = []
-        for i in webserver_config:
-                for root, dirs, files in os.walk(i):
-                        for file in files:
-                                if file.endswith(config_suffix):
-                                        config_files.append(os.path.join(root, file))
-
-# /etc/httpd/conf.d/ join
+# os.path.join - joines SERVERROOT and INCLUDES directory for vhost_directory_path
 def http_vhost_directory_fullpath(file_root, docs_directory):
         global vhost_directory_path
         PATH = []
@@ -54,8 +43,18 @@ def http_vhost_directory_fullpath(file_root, docs_directory):
                 # that we have our full param list for os.path.join
                 PATH = os.path.join(*args)
                 vhost_directory_path.append(PATH)
+                
+# Finds all VHOSTS in vhost_directory_path ending with SUFFIX defined in INCLUDE (get_http_includes)
+def website_configuration(webserver_config, config_suffix):
+        global config_files
+        config_files = []
+        for i in webserver_config:
+                for root, dirs, files in os.walk(i):
+                        for file in files:
+                                if file.endswith(config_suffix):
+                                        config_files.append(os.path.join(root, file))
 
-# document roots
+# Using the vhost files found in website_configuration, obtains DOCUMENTROOT directories
 def document_root(files_to_search):
         global DocRoots
         DocRoots = []
@@ -71,7 +70,7 @@ def document_root(files_to_search):
                                         DocRoots = filter(None, DocRoots) # remove empty string from array
 
 
-# finding the xml path with a combination of document root and local.xml location
+# Locating LOCAL.XML file using DocRoots and os.path.join
 def find_xml_file(document_root):
         global xml_full_path, magento_file
         app_etc = 'app/etc/'
@@ -93,6 +92,4 @@ http_vhost_directory_fullpath(server_root, config_directory)
 website_configuration(vhost_directory_path, SUFFIX)
 document_root(config_files)
 find_xml_file(DocRoots)
-# print xml_full_path ---> works
-# print DocRoots
 print magento_file
