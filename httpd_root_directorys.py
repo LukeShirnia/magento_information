@@ -6,10 +6,12 @@ import copy
 
 def print_header():
         print "-" * 60
+        print ""
         print " _____ _____ _____ _____ _____ _____ _____"
         print "|     |  _  |  ___|   __|   | |_   _|     |"
         print "| | | |     | |_| |   __| | | | | | |  |  |"
         print "|_|_|_|__|__|_____|_____|_|___| |_| |_____|"
+        print ""
         print "-" * 60
         print ""
 
@@ -39,7 +41,7 @@ def get_http_includes():
                                 server_root.append(line)
                                 server_root = [x.replace("ServerRoot", "") for x in server_root]
 
-# os.path.join - joines SERVERROOT and INCLUDES directory for vhost_directory_path
+# os.path.join - joins SERVERROOT and INCLUDES directory for vhost_directory_path
 def http_vhost_directory_fullpath(file_root, docs_directory):
         global vhost_directory_path
         PATH = []
