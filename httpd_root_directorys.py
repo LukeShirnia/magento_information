@@ -67,16 +67,25 @@ def document_root(files_to_search):
                                 if pattern.match(line.lower()):
                                         root_path = line.split(" ")[1]
                                         DocRoots.append(root_path)
-                                        DocRoots = [x.replace(' ', '') for x in DocRoots]
+                                        DocRoots = [x.rstrip() for x in DocRoots] # strips all whitespace after each docroot
+                                        DocRoots = filter(None, DocRoots) # remove empty string from array
+
 
 # finding the xml path with a combination of document root and local.xml location
 def find_xml_file(document_root):
-        global xml_full_path
-        app_etc_local_xml = 'app/etc/local.xml'
+        global xml_full_path, magento_file
+        app_etc = 'app/etc/'
         xml_full_path = []
+        convert_path = []
+        magento_file = []
+        #local_xml = re.compile("^local.xml$") ---> doesnt work with os.path.join
+        local_xml = "local.xml"
         for root in document_root:
-#                for path in app_etc_local_xml:
-                        xml_full_path.append(os.path.join(root, app_etc_local_xml))
+                        xml_full_path.append(os.path.join(root, app_etc))
+        for x in xml_full_path:
+                for root, dirs, files in os.walk(x):
+                        if local_xml in files:
+                                magento_file.append(os.path.join(root, local_xml))
 
 
 get_http_includes()
@@ -84,4 +93,6 @@ http_vhost_directory_fullpath(server_root, config_directory)
 website_configuration(vhost_directory_path, SUFFIX)
 document_root(config_files)
 find_xml_file(DocRoots)
-print xml_full_path
+# print xml_full_path ---> works
+# print DocRoots
+print magento_file
