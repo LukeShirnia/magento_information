@@ -3,6 +3,17 @@ import sys
 import re
 import copy
 
+
+def print_header():
+        print "-" * 60
+        print " _____ _____ _____ _____ _____ _____ _____"
+        print "|     |  _  |  ___|   __|   | |_   _|     |"
+        print "| | | |     | |_| |   __| | | | | | |  |  |"
+        print "|_|_|_|__|__|_____|_____|_|___| |_| |_____|"
+        print "-" * 60
+        print ""
+
+
 # This function finds the SERVERROOT for apache and then any potential INCLUDES for vhost locations
 def get_http_includes():
         global server_root, config_directory, SUFFIX
@@ -43,7 +54,7 @@ def http_vhost_directory_fullpath(file_root, docs_directory):
                 # that we have our full param list for os.path.join
                 PATH = os.path.join(*args)
                 vhost_directory_path.append(PATH)
-                
+
 # Finds all VHOSTS in vhost_directory_path ending with SUFFIX defined in INCLUDE (get_http_includes)
 def website_configuration(webserver_config, config_suffix):
         global config_files
@@ -92,4 +103,10 @@ http_vhost_directory_fullpath(server_root, config_directory)
 website_configuration(vhost_directory_path, SUFFIX)
 document_root(config_files)
 find_xml_file(DocRoots)
-print magento_file
+
+print ""
+print ""
+print_header()
+for w in magento_file: print w
+print ""
+print ""
