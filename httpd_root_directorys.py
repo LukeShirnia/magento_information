@@ -59,13 +59,14 @@ def http_vhost_directory_fullpath(file_root, docs_directory):
 def document_root(files_to_search):
         global DocRoots
         DocRoots = []
-        pattern = re.compile("^\s*documentroot")
+        root_path = []
+        pattern = re.compile("^\s*documentroot ")
         for i in files_to_search:
                 with open(i, "r") as search_file:
                         for line in search_file:
                                 if pattern.match(line.lower()):
-                                        DocRoots.append(line)
-                                        DocRoots = [x.replace(' ', '') for x in DocRoots]
+                                        root_path = line.split(" ")[1]
+                                        DocRoots.append(root_path)
 #        for print_doc_root in DocRoots: print print_doc_root #print document roots found in vhosts
 
 get_http_includes()
