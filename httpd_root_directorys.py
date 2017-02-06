@@ -34,10 +34,10 @@ def website_configuration(webserver_config, config_suffix):
         global config_files
         config_files = []
         for i in webserver_config:
-	        for root, dirs, files in os.walk(i):
-        	        for file in files:
-                	        if file.endswith(config_suffix):
-                        	        config_files.append(os.path.join(root, file))
+                for root, dirs, files in os.walk(i):
+                        for file in files:
+                                if file.endswith(config_suffix):
+                                        config_files.append(os.path.join(root, file))
 
 # /etc/httpd/conf.d/ join
 def http_vhost_directory_fullpath(file_root, docs_directory):
@@ -60,17 +60,28 @@ def document_root(files_to_search):
         global DocRoots
         DocRoots = []
         root_path = []
-        pattern = re.compile("^\s*documentroot ")
+        pattern = re.compile("^\s*documentroot")
         for i in files_to_search:
                 with open(i, "r") as search_file:
                         for line in search_file:
                                 if pattern.match(line.lower()):
                                         root_path = line.split(" ")[1]
                                         DocRoots.append(root_path)
-#        for print_doc_root in DocRoots: print print_doc_root #print document roots found in vhosts
+                                        DocRoots = [x.replace(' ', '') for x in DocRoots]
+
+# finding the xml path with a combination of document root and local.xml location
+def find_xml_file(document_root):
+        global xml_full_path
+        app_etc_local_xml = 'app/etc/local.xml'
+        xml_full_path = []
+        for root in document_root:
+#                for path in app_etc_local_xml:
+                        xml_full_path.append(os.path.join(root, app_etc_local_xml))
+
 
 get_http_includes()
 http_vhost_directory_fullpath(server_root, config_directory)
 website_configuration(vhost_directory_path, SUFFIX)
 document_root(config_files)
-print DocRoots
+find_xml_file(DocRoots)
+print xml_full_path
