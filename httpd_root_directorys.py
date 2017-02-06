@@ -72,4 +72,4 @@ get_http_includes()
 http_vhost_directory_fullpath(server_root, config_directory)
 website_configuration(vhost_directory_path, SUFFIX)
 document_root(config_files)
-print config_files
+print DocRoots
