@@ -1,6 +1,8 @@
 #!/usr/bin/python
-import cElementTree as ElementTree
-from sys import argv
+from xml.etree import ElementTree
 
+with open('local.xml', 'rt') as f:
+    tree = ElementTree.parse(f)
 
-
+for node in tree.iter():
+    print node.tag, node.attrib
