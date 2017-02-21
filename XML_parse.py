@@ -1,8 +1,16 @@
-#!/usr/bin/python
-from xml.etree import ElementTree
+import xml.etree.ElementTree as ET
+# https://docs.python.org/3/library/xml.etree.elementtree.html
 
-with open('local.xml', 'rt') as f:
-    tree = ElementTree.parse(f)
+tree = ET.parse('local.xml')
+root = tree.getroot()
 
-for node in tree.iter():
-    print node.tag, node.attrib
+print root.tag
+print root.attrib
+print ""
+
+for child in root:
+        print child.tag, child.attrib
+        print ""
+for neighbor in root.iter('neighbor'):
+        print neighbor.attrib
+        print ""
