@@ -5,9 +5,8 @@ import copy
 
 # This function finds the SERVERROOT for nginx and then any potential INCLUDES for server block locations
 def get_nginx_includes():
-        global config_directory_nginx, SUFFIX_NGINX
+        global config_directory_nginx, suffix_nginx
         config_directory_nginx = []
-        SUFFIX_NGINX = ".conf"
         CONFIG_DIR_NGINX = []
         PATH_NGINX = []
         include = re.compile("^\s*include")
@@ -28,8 +27,8 @@ def get_nginx_includes():
 
 	# probably need to loop the suffix through all includes instead of manually selecting the first array entry
 	suffix_nginx = suffix_nginx.split('/')[-1]
-	suffix_nginx = suffix_nginx.replace('*', "")
 	config_directory_nginx = [ remove_nginx_suffix.replace(suffix_nginx, "") for remove_nginx_suffix in config_directory_nginx ] 
+	suffix_nginx = suffix_nginx.replace('*', "")
 	print config_directory_nginx
 	print suffix_nginx
 
