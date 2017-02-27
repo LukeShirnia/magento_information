@@ -29,7 +29,16 @@ def get_nginx_includes():
 	suffix_nginx = suffix_nginx.split('/')[-1]
 	config_directory_nginx = [ remove_nginx_suffix.replace(suffix_nginx, "") for remove_nginx_suffix in config_directory_nginx ] 
 	suffix_nginx = suffix_nginx.replace('*', "")
-	print config_directory_nginx
-	print suffix_nginx
+
+def nginx_website_configuration(webserver_config, config_suffix):
+        global config_files
+        config_files = []
+        for i in webserver_config:
+                for root, dirs, files in os.walk(i):
+                        for file in files:
+                                if file.endswith(config_suffix):
+					config_files.append(os.path.join(root, file))
+					print config_files
 
 get_nginx_includes()
+nginx_website_configuration(config_directory_nginx, suffix_nginx)
