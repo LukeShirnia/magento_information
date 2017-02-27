@@ -28,7 +28,9 @@ def get_nginx_includes():
 
 	# probably need to loop the suffix through all includes instead of manually selecting the first array entry
 	suffix_nginx = suffix_nginx.split('/')[-1]
+	suffix_nginx = suffix_nginx.replace('*', "")
 	config_directory_nginx = [ remove_nginx_suffix.replace(suffix_nginx, "") for remove_nginx_suffix in config_directory_nginx ] 
 	print config_directory_nginx
+	print suffix_nginx
 
 get_nginx_includes()
