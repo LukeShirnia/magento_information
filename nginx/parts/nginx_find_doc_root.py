@@ -55,7 +55,6 @@ def document_root(nginx_files_to_search):
                                         NginxDocRoots = [x.rstrip() for x in NginxDocRoots] # strips all whitespace after each docroot
                                         NginxDocRoots = [x.rstrip(';') for x in NginxDocRoots] # strips all whitespace after each docroot
 					NginxDocRoots = filter(None, NginxDocRoots) # remove empty string from array
-	for x in NginxDocRoots: print x
 
 def find_xml_file(document_root):
         global xml_full_path, nginx_magento_file
@@ -65,8 +64,7 @@ def find_xml_file(document_root):
         nginx_magento_file = []
         local_xml = "local.xml"
         for root in document_root:
-                        xml_full_path.append(os.path.join(root, app_etc))
-#			print xml_full_path
+        	xml_full_path.append(os.path.join(root, app_etc))
         for p in xml_full_path:
                 for root, dirs, files in os.walk(p):
                         if local_xml in files:
@@ -78,3 +76,4 @@ get_nginx_includes()
 nginx_website_configuration(config_directory_nginx, suffix_nginx)
 document_root(nginx_config_files)
 find_xml_file(NginxDocRoots)
+for w in nginx_magento_file: print w
