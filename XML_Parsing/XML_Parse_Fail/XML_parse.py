@@ -4,13 +4,13 @@ import xml.etree.ElementTree as ET
 tree = ET.parse('local.xml')
 root = tree.getroot()
 
-print root.tag
-print root.attrib
+#print root.tag
+#print root.attrib
 print ""
 
 for child in root:
         print child.tag, child.attrib
         print ""
-for neighbor in root.iter('neighbor'):
-        print neighbor.attrib
+for neighbor in root.iter(tree):
+        print neighbor.text
         print ""
