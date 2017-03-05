@@ -5,19 +5,40 @@ def replace_CDATA(xml_variable):
 	xml_variable = xml_variable.replace("<![CDATA[", "")
 	xml_variable = xml_variable.replace("]]>","")
 	return xml_variable
-	
+
+def admin_url():
+        with open('long.local.xml') as infile:
+                record = False
+                for line in infile:
+                        if line.strip() == "<adminhtml>":
+                                record = True
+                        elif line.strip() == "</adminhtml>":
+                                record = False
+                        elif record:
+				admin_information(line)
+
+def admin_information(line):
+	admin = re.search("<frontName>(.*)</frontName>",line)
+	if admin:
+		print "-" * 50
+		admin = str(admin.group(1))
+		admin = replace_CDATA(admin)
+		print "Admin URL:", admin
+        	print "-" * 50
+		print ""
+
 def db_connection():
 	print "-" * 50
 	print "DATABASE INFORMATION"
 	print "-" * 50
 	with open('long.local.xml') as infile:
-		copy = False
+		record = False
 		for line in infile:
 			if line.strip() == "<connection>":
-				copy = True
+				record = True
 			elif line.strip() == "</connection>":
-				copy = False
-			elif copy:
+				record = False
+			elif record:
 				db_information(line)
 def db_information(line):
 	find_db_host = re.search("<host>(.*)</host>", line)
@@ -56,13 +77,13 @@ def session_db_information():
 #        session_db_start = ("<redis_session>","<memcache_session>")
 #        session_db_end = ("</backend_options>", "</redis_session>","</memcache_session>")
         with open('long.local.xml') as infile:
-                copy = False
+                record = False
 	        for line in infile:
 			if line.strip() == "<redis_session>":
-				copy = True
+				record = True
                         elif line.strip() == "</cache>":
-                                copy = False
-                        elif copy:
+                                record = False
+                        elif record:
                                 session_information(line)
 
 def session_information(line):
@@ -87,7 +108,7 @@ def session_information(line):
 		find_databases_number = replace_CDATA(find_databases_number)
 		print "Database #:", find_databases_number
 		
-
+admin_url()
 db_connection()
 print ""
 print ""
