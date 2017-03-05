@@ -74,8 +74,6 @@ def session_save():
 				session_db_information()
 
 def session_db_information():
-#        session_db_start = ("<redis_session>","<memcache_session>")
-#        session_db_end = ("</backend_options>", "</redis_session>","</memcache_session>")
         with open('long.local.xml') as infile:
                 record = False
 	        for line in infile:
@@ -107,9 +105,52 @@ def session_information(line):
 		find_databases_number = str(find_databases_number.group(1))
 		find_databases_number = replace_CDATA(find_databases_number)
 		print "Database #:", find_databases_number
+
+def full_page_cache():
+        with open('long.local.xml') as infile:
+	        record = False
+                for line in infile:
+                        if line.strip() == "<full_page_cache>":
+                                record = True
+                        elif line.strip() == "</full_page_cache>":
+                                record = False
+                        elif record:
+                                full_page_information(line)
+
+def full_page_information(line):
+	find_full_page_server = re.search("<server>(.*)</server>", line)
+	find_full_page_port = re.search("<port>(.*)</port>", line)
+	find_full_page_db_number = re.search("<database>(.*)</database>", line)
+	find_full_page_password = re.search("<password>(.*)</password>", line)
+	if find_full_page_server:
+		print "-" * 50
+		print "FULL PAGE CACHE"
+		print "-" * 50
+		find_full_page_server = str(find_full_page_server.group(1))
+		find_full_page_server = replace_CDATA(find_full_page_server)
+		print "Host     :", find_full_page_server
+	if find_full_page_port:
+		find_full_page_port = str(find_full_page_port.group(1))
+		find_full_page_port = replace_CDATA(find_full_page_port)
+		print "Port     :", find_full_page_port
+	if find_full_page_db_number:
+		find_full_page_db_number = str(find_full_page_db_number.group(1))
+		find_full_page_db_number = replace_CDATA(find_full_page_db_number)
+		print "Port #   :", find_full_page_db_number
+	if find_full_page_password:
+		find_full_page_password = str(find_full_page_password.group(1))
+		find_full_page_password = replace_CDATA(find_full_page_password)
+		print "Password :", find_full_page_password
 		
+print ""
 admin_url()
 db_connection()
 print ""
 print ""
 session_save()
+print ""
+print ""
+full_page_cache()
+print ""
+print ""
+
