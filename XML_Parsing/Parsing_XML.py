@@ -1,6 +1,8 @@
 # http://stackoverflow.com/questions/18865058/extract-values-between-two-strings-in-a-text-file-using-python
 import re
 
+local_xml = 'long.local.xml'
+
 # function used to strip CDATA if present
 def replace_CDATA(xml_variable):
 	xml_variable = xml_variable.replace("<![CDATA[", "")
@@ -16,7 +18,7 @@ def replace_session_CDATA(session_variable):
 
 # open file and search for all lines between open and closing of adminhtml tags
 def admin_url():
-        with open('long.local.xml') as infile:
+        with open(local_xml) as infile:
                 record = False
                 for line in infile:
                         if line.strip() == "<adminhtml>":
@@ -41,7 +43,7 @@ def db_connection():
 	print "-" * 50
 	print "DATABASE INFORMATION"
 	print "-" * 50
-	with open('long.local.xml') as infile:
+	with open(local_xml) as infile:
 		record = False
 		for line in infile:
 			if line.strip() == "<connection>":
@@ -76,7 +78,7 @@ def session_save():
 	print "-" * 50
 	print "SESSION INFORMATION"
 	print "-" * 50
-        with open('long.local.xml') as infile:
+        with open(local_xml) as infile:
                 for line in infile:
 			line = replace_session_CDATA(line)
 			if line.strip() == "db":
@@ -87,7 +89,7 @@ def session_save():
 				print "Sessions    : Files"
 def session_db_memecache():
 	service = "Memcache"
-	with open('long.local.xml') as infile:
+	with open(local_xml) as infile:
 		for line in infile:
 			session_save_path = re.search("<session_save_path>(.*)</session_save_path>" , line)
 			if session_save_path:
@@ -98,7 +100,7 @@ def session_db_memecache():
 	
 def session_db_information():
 	global session_service_name
-        with open('long.local.xml') as infile:
+        with open(local_xml) as infile:
                 record = False
 	        for line in infile:
 			if line.strip() == "<redis_session>":
@@ -136,7 +138,7 @@ def session_information(line):
 		print "Database #:", find_databases_number
 
 def full_page_cache():
-        with open('long.local.xml') as infile:
+        with open(local_xml) as infile:
 	        record = False
                 for line in infile:
                         if line.strip() == "<full_page_cache>":
@@ -179,11 +181,7 @@ print ""
 admin_url()
 db_connection()
 print ""
-print ""
 session_save()
-print ""
 print ""
 full_page_cache()
 print ""
-print ""
-
