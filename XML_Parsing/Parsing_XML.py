@@ -109,6 +109,10 @@ def session_db_information():
 			elif line.strip() == "<memcache_session>":
 				record = True
 				session_service_name = "Memcache"
+			elif line.strip() == "<backend>Cm_Cache_Backend_Redis</backend>":
+				record = True
+				print "CM"
+				session_service_name = "redis"
                         elif line.strip() == "</cache>":
                                 record = False
                         elif record:
@@ -143,18 +147,23 @@ def full_page_cache():
                 for line in infile:
                         if line.strip() == "<full_page_cache>":
                                 record = True
-                        elif line.strip() == "</full_page_cache>":
+			elif line.strip() == "<backend>Cm_Cache_Backend_Redis</backend>":
+				record = True
+                        # elif line.strip() == "</full_page_cache>":
+                        elif line.strip() == "</backend_options>":
                                 record = False
                         elif record:
                                 full_page_information(line)
 
 def full_page_information(line):
 	find_full_page_service = re.search("<backend>Mage_Cache_Backend_(.*)</backend>", line)
+	find_full_page_service_legacy = re.search("<backend>Cm_Cache_Backend_(.*)</backend>", line)
 	find_full_page_server = re.search("<server>(.*)</server>", line)
 	find_full_page_port = re.search("<port>(.*)</port>", line)
 	find_full_page_db_number = re.search("<database>(.*)</database>", line)
 	find_full_page_password = re.search("<password>(.*)</password>", line)
-	if find_full_page_service:
+	if find_full_page_service or find_full_page_service_legacy:
+	# if find_full_page_service or find_full_page_service_legacy:
                 print "-" * 50
                 print "FULL PAGE CACHE"
                 print "-" * 50
