@@ -82,12 +82,16 @@ def session_db_information():
 	        for line in infile:
 			if line.strip() == "<redis_session>":
 				record = True
+				service = "Redis"
+			elif line.strip() == "<memcache_session>":
+				record = True
+				service = "Memcache"
                         elif line.strip() == "</cache>":
                                 record = False
                         elif record:
-                                session_information(line)
+                                session_information(line, service)
 
-def session_information(line):
+def session_information(line, service_name):
         find_session_host = re.search("<host>(.*)</host>", line)
         find_session_port = re.search("<port>(.*)</port>", line)
         find_session_password = re.search("<password>(.*)</password>", line)
@@ -95,6 +99,7 @@ def session_information(line):
 	if find_session_host:
 		find_session_host = str(find_session_host.group(1))
 		find_session_host = replace_CDATA(find_session_host)
+		print "Service   :", service_name
 		print "Host      :", find_session_host
 	if find_session_port:
 		find_session_port = str(find_session_port.group(1))
