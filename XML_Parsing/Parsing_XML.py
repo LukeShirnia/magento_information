@@ -65,33 +65,54 @@ def db_information(line):
                 find_db_dbname = replace_CDATA(find_db_dbname)
                 print "Database  :", find_db_dbname
 
+def session_CDATA_strip(session_variable):
+        session_variable = session_variable.replace("<![CDATA[", "")
+        session_variable = session_variable.replace("]]>","")
+	session_variable = session_variable.replace("<session_save>", "")
+	session_variable = session_variable.replace("</session_save>", "")
+        return session_variable
+
 def session_save():
 	print "-" * 50
 	print "SESSION INFORMATION"
 	print "-" * 50
-	session_db_start = ("<redis_session>","<memcache_session>")
-	session_db_end = ("</backend_options>", "</redis_session>","</memcache_session>")
         with open('long.local.xml') as infile:
                 for line in infile:
-			if line.strip() == "<session_save><![CDATA[db]]></session_save>":
+			line = session_CDATA_strip(line)
+			if line.strip() == "db":
 				session_db_information()
-
+			elif line.strip() == "memcache":
+				session_db_memecache()
+			elif line.strip() == "files":
+				print "Sessions    : Files"
+def session_db_memecache():
+	service = "Memcache"
+	with open('long.local.xml') as infile:
+		for line in infile:
+			session_save_path = re.search("<session_save_path>(.*)</session_save_path>" , line)
+			if session_save_path:
+				session_save_path = str(session_save_path.group(1))
+				session_save_path = replace_CDATA(session_save_path)
+				print "Service   :", service
+				print "Save Path :", session_save_path
+	
 def session_db_information():
+	global session_service_name
         with open('long.local.xml') as infile:
                 record = False
 	        for line in infile:
 			if line.strip() == "<redis_session>":
 				record = True
-				service = "Redis"
+				session_service_name = "Redis"
 			elif line.strip() == "<memcache_session>":
 				record = True
-				service = "Memcache"
+				session_service_name = "Memcache"
                         elif line.strip() == "</cache>":
                                 record = False
                         elif record:
-                                session_information(line, service)
+                                session_information(line)
 
-def session_information(line, service_name):
+def session_information(line):
         find_session_host = re.search("<host>(.*)</host>", line)
         find_session_port = re.search("<port>(.*)</port>", line)
         find_session_password = re.search("<password>(.*)</password>", line)
@@ -99,7 +120,7 @@ def session_information(line, service_name):
 	if find_session_host:
 		find_session_host = str(find_session_host.group(1))
 		find_session_host = replace_CDATA(find_session_host)
-		print "Service   :", service_name
+		print "Service   :", session_service_name
 		print "Host      :", find_session_host
 	if find_session_port:
 		find_session_port = str(find_session_port.group(1))
