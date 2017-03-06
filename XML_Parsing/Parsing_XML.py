@@ -111,7 +111,6 @@ def session_db_information():
 				session_service_name = "Memcache"
 			elif line.strip() == "<backend>Cm_Cache_Backend_Redis</backend>":
 				record = True
-				print "CM"
 				session_service_name = "redis"
                         elif line.strip() == "</cache>":
                                 record = False
@@ -122,7 +121,7 @@ def session_information(line):
         find_session_host = re.search("<host>(.*)</host>", line)
         find_session_port = re.search("<port>(.*)</port>", line)
         find_session_password = re.search("<password>(.*)</password>", line)
-        find_databases_number = re.search("<database>(.*)</database>" , line)
+        find_databases_number = re.search("<database>(.*)</database>", line)
 	if find_session_host:
 		find_session_host = str(find_session_host.group(1))
 		find_session_host = replace_CDATA(find_session_host)
@@ -180,7 +179,7 @@ def full_page_information(line):
 	if find_full_page_db_number:
 		find_full_page_db_number = str(find_full_page_db_number.group(1))
 		find_full_page_db_number = replace_CDATA(find_full_page_db_number)
-		print "Port #   :", find_full_page_db_number
+		print "DB #     :", find_full_page_db_number
 	if find_full_page_password:
 		find_full_page_password = str(find_full_page_password.group(1))
 		find_full_page_password = replace_CDATA(find_full_page_password)
