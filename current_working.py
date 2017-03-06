@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import copy
+import math
 
 
 def print_header():
@@ -290,10 +291,10 @@ def xml_inspect():
 	full_page_cache()
 	print ""
 
+
 def XML_option():
 	global local_xml
 	xml_array = []
-	# print "Which XML file would you like to inspect? "
 	x = 0
 	for w in magento_file:
 		xml_array.append(w)
@@ -302,16 +303,22 @@ def XML_option():
         	x += 1
 	input_incorrect = True
 	while input_incorrect:
-		XML_answer = raw_input("Which XML file would you like to inspect? ")
-		XML_answer = int(XML_answer)
-		if ( XML_answer + 1) <= len(xml_array):
-			XML_option = xml_array[XML_answer]
-		 	input_incorrect = False
-			local_xml = str(XML_option)
-			return XML_option
-		else:
-			print "Incorrect Value, please try again"
-			input_incorrect = True
+		Not_Integer = True
+		while Not_Integer:
+			XML_answer = raw_input("Which XML file would you like to inspect? ")
+			if XML_answer.isdigit():
+				XML_answer = int(XML_answer)
+				if ( XML_answer + 1) <= len(xml_array):
+	                	        XML_option = xml_array[XML_answer]
+	                        	input_incorrect = False
+		                        local_xml = str(XML_option)
+	        	                return XML_option
+				else:
+					print "Incorrect Value, please select a VALID option...try again"
+					input_incorrect = True
+			else:
+			        print "Incorrect Value ONLY numbers allowed, please try again"
+                	        input_incorrect = True
 
 
 get_http_includes()
