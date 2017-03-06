@@ -7,6 +7,13 @@ def replace_CDATA(xml_variable):
 	xml_variable = xml_variable.replace("]]>","")
 	return xml_variable
 
+def replace_session_CDATA(session_variable):
+        session_variable = session_variable.replace("<![CDATA[", "")
+        session_variable = session_variable.replace("]]>","")
+        session_variable = session_variable.replace("<session_save>", "")
+        session_variable = session_variable.replace("</session_save>", "")
+        return session_variable
+
 # open file and search for all lines between open and closing of adminhtml tags
 def admin_url():
         with open('long.local.xml') as infile:
@@ -65,20 +72,13 @@ def db_information(line):
                 find_db_dbname = replace_CDATA(find_db_dbname)
                 print "Database  :", find_db_dbname
 
-def session_CDATA_strip(session_variable):
-        session_variable = session_variable.replace("<![CDATA[", "")
-        session_variable = session_variable.replace("]]>","")
-	session_variable = session_variable.replace("<session_save>", "")
-	session_variable = session_variable.replace("</session_save>", "")
-        return session_variable
-
 def session_save():
 	print "-" * 50
 	print "SESSION INFORMATION"
 	print "-" * 50
         with open('long.local.xml') as infile:
                 for line in infile:
-			line = session_CDATA_strip(line)
+			line = replace_session_CDATA(line)
 			if line.strip() == "db":
 				session_db_information()
 			elif line.strip() == "memcache":
