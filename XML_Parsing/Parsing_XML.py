@@ -1,11 +1,13 @@
 # http://stackoverflow.com/questions/18865058/extract-values-between-two-strings-in-a-text-file-using-python
 import re
 
+# function used to strip CDATA if present
 def replace_CDATA(xml_variable):
 	xml_variable = xml_variable.replace("<![CDATA[", "")
 	xml_variable = xml_variable.replace("]]>","")
 	return xml_variable
 
+# open file and search for all lines between open and closing of adminhtml tags
 def admin_url():
         with open('long.local.xml') as infile:
                 record = False
@@ -17,6 +19,7 @@ def admin_url():
                         elif record:
 				admin_information(line)
 
+# find the admin url present between the frontName tag
 def admin_information(line):
 	admin = re.search("<frontName>(.*)</frontName>",line)
 	if admin:
@@ -118,14 +121,18 @@ def full_page_cache():
                                 full_page_information(line)
 
 def full_page_information(line):
+	find_full_page_service = re.search("<backend>Mage_Cache_Backend_(.*)</backend>", line)
 	find_full_page_server = re.search("<server>(.*)</server>", line)
 	find_full_page_port = re.search("<port>(.*)</port>", line)
 	find_full_page_db_number = re.search("<database>(.*)</database>", line)
 	find_full_page_password = re.search("<password>(.*)</password>", line)
+	if find_full_page_service:
+                print "-" * 50
+                print "FULL PAGE CACHE"
+                print "-" * 50
+		find_full_page_service = str(find_full_page_service.group(1))
+		print "Service  :", find_full_page_service
 	if find_full_page_server:
-		print "-" * 50
-		print "FULL PAGE CACHE"
-		print "-" * 50
 		find_full_page_server = str(find_full_page_server.group(1))
 		find_full_page_server = replace_CDATA(find_full_page_server)
 		print "Host     :", find_full_page_server
