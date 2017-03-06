@@ -1,8 +1,15 @@
 # python-not-production-
-This python section is for current projects. Nothing in here should be cloned unless stated in the README!
+This python section is for current projects. Nothing in here should be cloned/run unless stated in the README!
+
+
 
 
 Current working version of "Magento Information Gatherer" can be used by running the following command:
+
+
+
+
+
 
 
 
