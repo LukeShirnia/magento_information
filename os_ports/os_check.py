@@ -6,16 +6,16 @@ import sys
 
 def version_check():
         global os_version, supported_centos, supported_ubuntu, CentOS_RedHat_Distro
-        CentOS_RedHat_Distro = ['CentOS Linux', 'RedHat Linux', 'redhat', 'centos', 'CentOS']
-        Ubuntu_Debian_Distro = ['Ubuntu Linux']
+        CentOS_RedHat_Distro = ['redhat', 'centos']
+        Ubuntu_Debian_Distro = ['ubuntu', 'debian']
         supported_centos = [6, 7]
         supported_ubuntu = [12, 14, 16]
         os_version = platform.linux_distribution()[1]
         os_version_test = os_version.split()
 
-        if os_distro in CentOS_RedHat_Distro:
+        if os_distro.lower() in CentOS_RedHat_Distro:
                 print os_distro, os_version
-        elif os_distro in Ubuntu_Debian_Distro:
+        elif os_distro.lower() in Ubuntu_Debian_Distro:
                 print os_distro, os_version
         else:
                 print os_distro, os_version
