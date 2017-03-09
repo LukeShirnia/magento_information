@@ -27,6 +27,7 @@ def os_check():
 
         if os_platform == "Linux":
                 os_distro = platform.linux_distribution()[0]
+                os_distro = os_distro.split()[0]
                 version_check()
         else:
                 print "Stop Using A Rubish OS"
