@@ -1,4 +1,3 @@
-# http://stackoverflow.com/questions/18865058/extract-values-between-two-strings-in-a-text-file-using-python
 import re
 from sys import argv
 

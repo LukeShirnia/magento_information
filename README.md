@@ -10,7 +10,7 @@ Replace "local.xml" in the command below with the full path to your file.
 
 
 ```
-curl -s https://raw.githubusercontent.com/LukeShirnia/python-not-production-/master/Parsing_XML.py | python - local.xml
+curl -s https://raw.githubusercontent.com/LukeShirnia/magento_information/master/Parsing_XML.py | python - local.xml
 ```
 <br />
 
@@ -29,7 +29,7 @@ Current working version of "Magento Information Gatherer" can be used by running
 
 
 ```
-python <(curl -s https://raw.githubusercontent.com/luke7858/python-not-production-/master/magento_information_gathering.py)
+python <(curl -s https://raw.githubusercontent.com/LukeShirnia/magento_information/master/magento_information_gathering.py)
 ```
 
 This script is only tested on:
