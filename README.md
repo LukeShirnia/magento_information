@@ -10,7 +10,7 @@ Replace "local.xml" in the command below with the full path to your file.
 
 
 ```
-https://raw.githubusercontent.com/LukeShirnia/python-not-production-/master/XML_Parsing/Parsing_XML.py | python - local.xml
+curl -s https://raw.githubusercontent.com/LukeShirnia/python-not-production-/master/XML_Parsing/Parsing_XML.py | python - local.xml
 ```
 <br />
 
