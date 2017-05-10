@@ -1,7 +1,6 @@
 # http://stackoverflow.com/questions/18865058/extract-values-between-two-strings-in-a-text-file-using-python
 import re
-
-local_xml = 'long.local.xml'
+from sys import argv
 
 # function used to strip CDATA if present
 def replace_CDATA(xml_variable):
@@ -184,12 +183,19 @@ def full_page_information(line):
 		find_full_page_password = str(find_full_page_password.group(1))
 		find_full_page_password = replace_CDATA(find_full_page_password)
 		print "Password :", find_full_page_password
-		
-print ""
-admin_url()
-db_connection()
-print ""
-session_save()
-print ""
-full_page_cache()
-print ""
+
+
+if len(argv) == 1:	
+	print "Please add an argument of the local.xml file"
+elif len(argv) == 2:
+	script, local_xml = argv
+	print ""
+	admin_url()
+	db_connection()
+	print ""
+	session_save()
+	print ""
+	full_page_cache()
+	print ""
+else:
+	print "Too many arguments"

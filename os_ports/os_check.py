@@ -1,34 +1,42 @@
 #!/usr/bin/python
 import platform
 import sys
+# does not currently work on RHEL/CENTOS 5
 
-#global os_platform
+supported_centos = ['5', '6', '7']
+supported_ubuntu = ['12', '14', '16']
+CentOS_RedHat_Distro = ['redhat', 'centos', 'red', 'red hat']
+Ubuntu_Debian_Distro = ['ubuntu', 'debian']
 
 def version_check():
-        global os_version, supported_centos, supported_ubuntu, CentOS_RedHat_Distro
-        CentOS_RedHat_Distro = ['CentOS Linux', 'RedHat Linux', 'redhat', 'centos', 'CentOS']
-        Ubuntu_Debian_Distro = ['Ubuntu Linux']
-        supported_centos = [6, 7]
-        supported_ubuntu = [12, 14, 16]
-        os_version = platform.linux_distribution()[1]
-        os_version_test = os_version.split()
-
-        if os_distro in CentOS_RedHat_Distro:
-                print os_distro, os_version
-        elif os_distro in Ubuntu_Debian_Distro:
-                print os_distro, os_version
-        else:
-                print os_distro, os_version
-                print "Something wrong"
+	os_version = platform.linux_distribution()[1]
+	os_version = os_version.split(".")[0]
+	
+	if os_version in supported_centos:
+		print "Supported RedHat/CentOS"
+		print platform.linux_distribution()[1]
+	elif os_version in supported_ubuntu:
+		print "Supported Ubuntu/Debian"
+		print platform.linux_distribution()[1]
+	else:
+		print "Something wrong"
+		print os_version 
 
 def os_check():
-        global os_distro, os_version, os_platform
         os_platform = platform.system()
-
         if os_platform == "Linux":
-                os_distro = platform.linux_distribution()[0]
-                version_check()
+                distro = platform.linux_distribution()[0]
+                distro = distro.split()[0]
+                return distro
         else:
-                print "Stop Using A Rubish OS"
+		print "Stop Using a Rubbish OS!!"
 
-os_check()
+os_check_value = os_check()
+if os_check_value.lower() in CentOS_RedHat_Distro:
+	print os_check_value
+	version_check()
+elif os_check_value.lower() in Ubuntu_Debian_Distro:
+	print os_check_value
+	version_check()
+else:
+	print "OS Not Recognised"
