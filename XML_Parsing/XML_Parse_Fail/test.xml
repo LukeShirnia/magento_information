@@ -1,4 +1,0 @@
-<process id="process1">
- <log name="name1" device="device1"><![CDATA[timestamp value]]></log>
- <log name="name2" device="device2"><![CDATA[timestamp value, timestamp value, timestamp]]></log>
-</process>
