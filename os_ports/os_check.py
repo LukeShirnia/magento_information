@@ -21,7 +21,6 @@ def version_check():
 	else:
 		print "Something wrong"
 		print os_version 
-
 def os_check():
         os_platform = platform.system()
         if os_platform == "Linux":
