@@ -1,5 +1,5 @@
-# python-not-production-
-This python section is for current projects. Nothing in here should be cloned/run unless stated in the README!
+# magento_information
+
 
 
 ### XML Parsing
