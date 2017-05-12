@@ -78,7 +78,7 @@ def document_root(files_to_search):
                 with open(i, "r") as search_file:
                         for line in search_file:
                                 if pattern.match(line.lower()):
-                                        root_path = line.split(" ")[1]
+                                        root_path = line.split()[1]
                                         DocRoots.append(root_path)
                                         DocRoots = [x.rstrip() for x in DocRoots] # strips all whitespace after each docroot
                                         DocRoots = filter(None, DocRoots) # remove empty string from array
