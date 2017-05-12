@@ -9,6 +9,7 @@ Currently there are 2 versions of this script, 1 for httpd (CentOS/RHEL) and one
 There are currently plans to merge the scripts together and "clean" the code. 
 
 <br />
+
 ### HTTP
 
 * ONLY works on CentOS/RHEL
@@ -40,6 +41,8 @@ This script is only tested on:
 python <(curl -shttps://raw.githubusercontent.com/LukeShirnia/magento_information/master/nginx_magento_information_gathering.py)
 
 ```
+<br />
+
 <br />
 
 <br />
