@@ -1,6 +1,10 @@
 import re
 from sys import argv
 
+
+#class XML_Parse(object):
+
+
 # function used to strip CDATA if present
 def replace_CDATA(xml_variable):
 	xml_variable = xml_variable.replace("<![CDATA[", "")

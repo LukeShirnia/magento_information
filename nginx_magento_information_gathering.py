@@ -309,10 +309,6 @@ def XML_option():
                                 input_incorrect = True
 
 
-
-
-
-
 get_nginx_includes()
 nginx_website_configuration(config_directory_nginx, suffix_nginx)
 document_root(nginx_config_files)
@@ -325,7 +321,3 @@ XML_option()
 print ""
 print ""
 xml_inspect()
-
-
-
-#for w in nginx_magento_file: print w
