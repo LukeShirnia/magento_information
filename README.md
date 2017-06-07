@@ -38,7 +38,7 @@ This script is only tested on:
 <br />
 
 ```
-python <(curl -shttps://raw.githubusercontent.com/LukeShirnia/magento_information/master/nginx_magento_information_gathering.py)
+python <(curl -s https://raw.githubusercontent.com/LukeShirnia/magento_information/master/nginx_magento_information_gathering.py)
 
 ```
 <br />
