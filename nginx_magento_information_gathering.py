@@ -1,244 +1,226 @@
-import os
-import sys
+#!/usr/bin/env python
+import subprocess
 import re
-import copy
-
-# This function finds the SERVERROOT for nginx and then any potential INCLUDES for server block locations
-
-def print_header():
-        print "-" * 60
-        print ""
-        print " _____ _____ _____ _____ _____ _____ _____"
-        print "|     |  _  |  ___|   __|   | |_   _|     |"
-        print "| | | |     | |_| |   __| | | | | | |  |  |"
-        print "|_|_|_|__|__|_____|_____|_|___| |_| |_____|"
-        print ""
-        print "-" * 60
-        print ""
+import sys
+import os
+import urllib2
 
 
+class bcolors:
+    """
+    This class is to display differnet colour fonts
+    """
+    GREEN = '\033[1;32m'
+    RESET = '\033[0m'
+    WHITE = '\033[1m'
+    CYAN = '\033[96m'
+    YELLOW = '\033[93m'
 
-def get_nginx_includes():
-        global config_directory_nginx, suffix_nginx
-        config_directory_nginx = []
-        CONFIG_DIR_NGINX = []
-        PATH_NGINX = []
-        include = re.compile("^\s*include")
 
-        with open("/etc/nginx/nginx.conf", "r") as search_file:
-                for line in search_file:
-                        if include.match(line.lower()):
- 				line = line.strip()
-                                line = line.split(" ")[1]
-                                CONFIG_DIR_NGINX = line
-                                config_directory_nginx.append(CONFIG_DIR_NGINX)
-				# remove all empty array entries
-				config_directory_nginx = filter(None, config_directory_nginx)
-				# remove ; from directory path
-				config_directory_nginx = [x.replace(';', "") for x in config_directory_nginx]
-	# find the suffix for each directory and then remove it from the array of includes	
-	suffix_nginx = config_directory_nginx[1]
-
-	# probably need to loop the suffix through all includes instead of manually selecting the first array entry
-	suffix_nginx = suffix_nginx.split('/')[-1]
-	config_directory_nginx = [ remove_nginx_suffix.replace(suffix_nginx, "") for remove_nginx_suffix in config_directory_nginx ] 
-	suffix_nginx = suffix_nginx.replace('*', "")
-
-def nginx_website_configuration(webserver_config, config_suffix):
-        global nginx_config_files
-        nginx_config_files = []
-        for i in webserver_config:
-                for root, dirs, files in os.walk(i):
-                        for file in files:
-                                if file.endswith(config_suffix):
-					nginx_config_files.append(os.path.join(root, file))
-
-def document_root(nginx_files_to_search):
-	# for i in nginx_files_to_search: print i
-	global NginxDocRoots
-	NginxDocRoots = []
-        root_path = []
-        pattern = re.compile("^\s*root")
-        for i in nginx_files_to_search:
-                with open(i, "r") as search_file:
-                        for line in search_file:
-                                if pattern.match(line.lower()):
-                                        root_path = line.strip()
-					root_path = re.split("root ", line, flags=re.IGNORECASE)[1]
-                                        NginxDocRoots.append(root_path)
-                                        NginxDocRoots = [x.rstrip() for x in NginxDocRoots] # strips all whitespace after each docroot
-                                        NginxDocRoots = [x.rstrip(';') for x in NginxDocRoots] # strips all whitespace after each docroot
-					NginxDocRoots = filter(None, NginxDocRoots) # remove empty string from array
-
-def find_xml_file(document_root):
-        global xml_full_path, nginx_magento_file
-        app_etc = 'app/etc/'
-        xml_full_path = []
-        convert_path = []
-        nginx_magento_file = []
-        local_xml = "local.xml"
-        for root in document_root:
-        	xml_full_path.append(os.path.join(root, app_etc))
-        for p in xml_full_path:
-                for root, dirs, files in os.walk(p):
-                        if local_xml in files:
-				nginx_magento_file.append(os.path.join(root, local_xml))
-				nginx_magento_file = filter(None, nginx_magento_file)
-
-def replace_CDATA(xml_variable):
+class XML_Parse(object):
+    def __init__(self, arg):
+        self.local_xml = arg
+        self._xml_check()
+    
+    
+    def replace_CDATA(self, xml_variable):
+        '''
+        Replace the CDATA from the lines, stripping out the data
+        '''
         xml_variable = xml_variable.replace("<![CDATA[", "")
         xml_variable = xml_variable.replace("]]>","")
         return xml_variable
-
-def replace_session_CDATA(session_variable):
+    
+    
+    def replace_session_CDATA(self, session_variable):
+        '''
+        Replace "session" string from extracted data
+        '''
         session_variable = session_variable.replace("<![CDATA[", "")
         session_variable = session_variable.replace("]]>","")
         session_variable = session_variable.replace("<session_save>", "")
         session_variable = session_variable.replace("</session_save>", "")
         return session_variable
-
-# open file and search for all lines between open and closing of adminhtml tags
-def admin_url():
-        with open(local_xml) as infile:
-                record = False
-                for line in infile:
-                        if line.strip() == "<adminhtml>":
-                                record = True
-                        elif line.strip() == "</adminhtml>":
-                                record = False
-                        elif record:
-                                admin_information(line)
-
-# find the admin url present between the frontName tag
-def admin_information(line):
+    
+    
+    def admin_url(self):
+        '''
+        Open the xml file and locate the admin url tags, record all lines in between <adminhtml>
+        '''
+        with open(self.local_xml) as infile:
+            record = False
+            for line in infile:
+                    if line.strip() == "<adminhtml>":
+                        record = True
+                    elif line.strip() == "</adminhtml>":
+                        record = False
+                    elif record:
+                        self.admin_information(line)
+    
+    
+    def admin_information(self, line):
+        '''
+        Based on the information obtained in the previous function, find the URL inbetween the <frontName> tag
+        '''
         admin = re.search("<frontName>(.*)</frontName>",line)
         if admin:
-                print "-" * 50
-                admin = str(admin.group(1))
-                admin = replace_CDATA(admin)
-                print "Admin URL:", admin
-                print "-" * 50
-                print ""
-
-def db_connection():
+            print "-" * 50
+            admin = str(admin.group(1))
+            admin = self.replace_CDATA(admin)
+            print bcolors.GREEN + "Admin URL:" + bcolors.RESET , admin
+            print "-" * 50
+            print ""
+    
+    
+    def db_connection(self):
+        '''
+        Start "recording" once the <connection> tag is found. 
+        Every line is then searched in the db_information() function
+        '''
         print "-" * 50
-        print "DATABASE INFORMATION"
+        print bcolors.CYAN + "DATABASE INFORMATION" + bcolors.RESET
         print "-" * 50
-        with open(local_xml) as infile:
-                record = False
-                for line in infile:
-                        if line.strip() == "<connection>":
-                                record = True
-                        elif line.strip() == "</connection>":
-                                record = False
-                        elif record:
-                                db_information(line)
-
-def db_information(line):
+        with open(self.local_xml) as infile:
+            record = False
+            for line in infile:
+                if line.strip() == "<connection>":
+                    record = True
+                elif line.strip() == "</connection>":
+                    record = False
+                elif record:
+                    self.db_information(line)
+    
+    
+    def db_information(self, line):
+        '''
+        Extract database information
+        '''
         find_db_host = re.search("<host>(.*)</host>", line)
         find_db_username = re.search("<username>(.*)</username>", line)
         find_db_password = re.search("<password>(.*)</password>", line)
         find_db_dbname = re.search("<dbname>(.*)</dbname>", line)
         if find_db_host:
-                find_db_host = find_db_host.group(1)
-                find_db_host = replace_CDATA(find_db_host)
-                print "Host      :", find_db_host
-        if find_db_username:
+            find_db_host = find_db_host.group(1)
+            find_db_host = self.replace_CDATA(find_db_host)
+            print bcolors.YELLOW + "Host      :" + bcolors.RESET, find_db_host
+            if find_db_username:
                 find_db_username = str(find_db_username.group(1))
-                find_db_username = replace_CDATA(find_db_username)
-                print "Username  :", find_db_username
-        if find_db_password:
+                find_db_username = self.replace_CDATA(find_db_username)
+                print bcolors.YELLOW + "Username  :" + bcolors.RESET, find_db_username
+            if find_db_password:
                 find_db_password = str(find_db_password.group(1))
-                find_db_password = replace_CDATA(find_db_password)
-                print "Password  :", find_db_password
-        if find_db_dbname:
+                find_db_password = self.replace_CDATA(find_db_password)
+                print bcolors.YELLOW + "Password  :" + bcolors.RESET, find_db_password
+            if find_db_dbname:
                 find_db_dbname = str(find_db_dbname.group(1))
-                find_db_dbname = replace_CDATA(find_db_dbname)
-                print "Database  :", find_db_dbname
-
-def session_save():
+                find_db_dbname = self.replace_CDATA(find_db_dbname)
+                print bcolors.YELLOW + "Database  :" + bcolors.RESET, find_db_dbname
+    
+    
+    def session_save(self):
+        '''
+        Check to see where sessions are saved. Run different functions depending on the session location
+        '''
         print "-" * 50
-        print "SESSION INFORMATION"
+        print bcolors.CYAN + "SESSION INFORMATION" + bcolors.RESET
         print "-" * 50
-        with open(local_xml) as infile:
-                for line in infile:
-                        line = replace_session_CDATA(line)
-                        if line.strip() == "db":
-                                session_db_information()
-                        elif line.strip() == "memcache":
-                                session_db_memecache()
-                        elif line.strip() == "files":
-                                print "Sessions    : Files"
-def session_db_memecache():
+        with open(self.local_xml) as infile:
+            for line in infile:
+                line = self.replace_session_CDATA(line)
+                if line.strip() == "db":
+                    self.session_db_information()
+                elif line.strip() == "memcache":
+                    self.session_db_memecache()
+                elif line.strip() == "files":
+                    print "Sessions    : Files"
+    
+    
+    def session_db_memecache(self):
+        '''
+        If sessions are saved in memcache, check for specific directives in the line
+        '''
         service = "Memcache"
-        with open(local_xml) as infile:
-                for line in infile:
-                        session_save_path = re.search("<session_save_path>(.*)</session_save_path>" , line)
-                        if session_save_path:
-                                session_save_path = str(session_save_path.group(1))
-                                session_save_path = replace_CDATA(session_save_path)
-                                print "Service   :", service
-                                print "Save Path :", session_save_path
-
-
-def session_db_information():
-        global session_service_name
-        with open(local_xml) as infile:
-                record = False
-                for line in infile:
-                        if line.strip() == "<redis_session>":
-                                record = True
-                                session_service_name = "Redis"
-                        elif line.strip() == "<memcache_session>":
-                                record = True
-                                session_service_name = "Memcache"
-                        elif line.strip() == "<backend>Cm_Cache_Backend_Redis</backend>":
-                                record = True
-                                session_service_name = "redis"
-                        elif line.strip() == "</cache>":
-                                record = False
-                        elif record:
-                                session_information(line)
-
-def session_information(line):
+        with open(self.local_xml) as infile:
+            for line in infile:
+                session_save_path = re.search("<session_save_path>(.*)</session_save_path>" , line)
+                if session_save_path:
+                    session_save_path = str(session_save_path.group(1))
+                    session_save_path = self.replace_CDATA(session_save_path)
+                    print bcolors.YELLOW + "Service   :" + bcolors.RESET , service
+                    print bcolors.YELLOW + "Save Path :" + bcolors.RESET, session_save_path
+    
+        
+    def session_db_information(self):
+        '''
+        Find out if redis, memcache is used 
+        '''
+        with open(self.local_xml) as infile:
+            record = False
+            for line in infile:
+                if line.strip() == "<redis_session>":
+                    record = True
+                    session_service_name = "Redis"
+                elif line.strip() == "<memcache_session>":
+                    record = True
+                    session_service_name = "Memcache"
+                elif line.strip() == "<backend>Cm_Cache_Backend_Redis</backend>":
+                    record = True
+                    session_service_name = "redis"
+                elif line.strip() == "</cache>":
+                    record = False
+                elif record:
+                     self.session_information(line, session_service_name)
+    
+    
+    def session_information(self, line, session_service_name):
+        '''
+        Get the session db information
+        '''
         find_session_host = re.search("<host>(.*)</host>", line)
         find_session_port = re.search("<port>(.*)</port>", line)
         find_session_password = re.search("<password>(.*)</password>", line)
         find_databases_number = re.search("<database>(.*)</database>", line)
         if find_session_host:
-                find_session_host = str(find_session_host.group(1))
-                find_session_host = replace_CDATA(find_session_host)
-                print "Service   :", session_service_name
-                print "Host      :", find_session_host
+            find_session_host = str(find_session_host.group(1))
+            find_session_host = self.replace_CDATA(find_session_host)
+            print bcolors.YELLOW + "Service   :" + bcolors.RESET, session_service_name
+            print bcolors.YELLOW +  "Host      :" + bcolors.RESET, find_session_host
         if find_session_port:
-                find_session_port = str(find_session_port.group(1))
-                find_session_port = replace_CDATA(find_session_port)
-                print "Port      :", find_session_port
+            find_session_port = str(find_session_port.group(1))
+            find_session_port = self.replace_CDATA(find_session_port)
+            print bcolors.YELLOW + "Port      :" + bcolors.RESET, find_session_port
         if find_session_password:
-                find_session_password = str(find_session_password.group(1))
-                find_session_password = replace_CDATA(find_session_password)
-                print "Password  :", find_session_password
+            find_session_password = str(find_session_password.group(1))
+            find_session_password = self.replace_CDATA(find_session_password)
+            print bcolors.YELLOW + "Password  :" + bcolors.RESET, find_session_password
         if find_databases_number:
-                find_databases_number = str(find_databases_number.group(1))
-                find_databases_number = replace_CDATA(find_databases_number)
-                print "Database #:", find_databases_number
-
-
-def full_page_cache():
-        with open(local_xml) as infile:
-                record = False
-                for line in infile:
-                        if line.strip() == "<full_page_cache>":
-                                record = True
-                        elif line.strip() == "<backend>Cm_Cache_Backend_Redis</backend>":
-                                record = True
-                        # elif line.strip() == "</full_page_cache>":
-                        elif line.strip() == "</backend_options>":
-                                record = False
-                        elif record:
-                                full_page_information(line)
-
-def full_page_information(line):
+            find_databases_number = str(find_databases_number.group(1))
+            find_databases_number = self.replace_CDATA(find_databases_number)
+            print bcolors.YELLOW + "Database #:" + bcolors.RESET, find_databases_number
+    
+    
+    def full_page_cache(self):
+        '''
+        Find out if full page cache is used
+        '''
+        with open(self.local_xml) as infile:
+            record = False
+            for line in infile:
+                if line.strip() == "<full_page_cache>":
+                    record = True
+                elif line.strip() == "<backend>Cm_Cache_Backend_Redis</backend>":
+                    record = True
+               # elif line.strip() == "</full_page_cache>":
+                elif line.strip() == "</backend_options>":
+                    record = False
+                elif record:
+                    self.full_page_information(line)
+    
+    
+    def full_page_information(self, line):
+        '''
+        If full page cache is used, find out all the information about it
+        '''
         find_full_page_service = re.search("<backend>Mage_Cache_Backend_(.*)</backend>", line)
         find_full_page_service_legacy = re.search("<backend>Cm_Cache_Backend_(.*)</backend>", line)
         find_full_page_server = re.search("<server>(.*)</server>", line)
@@ -246,78 +228,351 @@ def full_page_information(line):
         find_full_page_db_number = re.search("<database>(.*)</database>", line)
         find_full_page_password = re.search("<password>(.*)</password>", line)
         if find_full_page_service or find_full_page_service_legacy:
-        # if find_full_page_service or find_full_page_service_legacy:
-                print "-" * 50
-                print "FULL PAGE CACHE"
-                print "-" * 50
-                find_full_page_service = str(find_full_page_service.group(1))
-                print "Service  :", find_full_page_service
+            print "-" * 50
+            print bcolors.CYAN + "FULL PAGE CACHE" + bcolors.RESET
+            print "-" * 50
+            find_full_page_service = str(find_full_page_service.group(1))
+            print bcolors.YELLOW + "Service  :" + bcolors.RESET, find_full_page_service
         if find_full_page_server:
-                find_full_page_server = str(find_full_page_server.group(1))
-                find_full_page_server = replace_CDATA(find_full_page_server)
-                print "Host     :", find_full_page_server
+            find_full_page_server = str(find_full_page_server.group(1))
+            find_full_page_server = self.replace_CDATA(find_full_page_server)
+            print bcolors.YELLOW + "Host     :" + bcolors.RESET, find_full_page_server
         if find_full_page_port:
-                find_full_page_port = str(find_full_page_port.group(1))
-                find_full_page_port = replace_CDATA(find_full_page_port)
-                print "Port     :", find_full_page_port
+            find_full_page_port = str(find_full_page_port.group(1))
+            find_full_page_port = self.replace_CDATA(find_full_page_port)
+            print bcolors.YELLOW + "Port     :" + bcolors.RESET, find_full_page_port
         if find_full_page_db_number:
-                find_full_page_db_number = str(find_full_page_db_number.group(1))
-                find_full_page_db_number = replace_CDATA(find_full_page_db_number)
-                print "DB #     :", find_full_page_db_number
+            find_full_page_db_number = str(find_full_page_db_number.group(1))
+            find_full_page_db_number = self.replace_CDATA(find_full_page_db_number)
+            print bcolors.YELLOW + "DB #     :" + bcolors.RESET, find_full_page_db_number
         if find_full_page_password:
-                find_full_page_password = str(find_full_page_password.group(1))
-                find_full_page_password = replace_CDATA(find_full_page_password)
-                print "Password :", find_full_page_password
-
-def xml_inspect():
+            find_full_page_password = str(find_full_page_password.group(1))
+            find_full_page_password = self.replace_CDATA(find_full_page_password)
+            print bcolors.YELLOW + "Password :" + bcolors.RESET, find_full_page_password
+    
+    
+    def _xml_check(self):
+        #self.XML_Parse(xml_file)
+        #print ""
+        self.admin_url()
+        self.db_connection()
         print ""
-        admin_url()
-        db_connection()
+        self.session_save()
         print ""
-        session_save()
-        print ""
-        full_page_cache()
+        self.full_page_cache()
         print ""
 
 
-def XML_option():
-        global local_xml
-        xml_array = []
-        x = 0
-        for w in nginx_magento_file:
-                xml_array.append(w)
-        for y in xml_array:
-                print "Option ", x, " ", y
-                x += 1
-        input_incorrect = True
-        while input_incorrect:
-                Not_Integer = True
-                while Not_Integer:
-                        XML_answer = raw_input("Which XML file would you like to inspect? ")
-                        if XML_answer.isdigit():
-                                XML_answer = int(XML_answer)
-                                if ( XML_answer + 1) <= len(xml_array):
-                                        XML_option = xml_array[XML_answer]
-                                        input_incorrect = False
-                                        local_xml = str(XML_option)
-                                        return XML_option
-                                else:
-                                        print "Incorrect Value, please select a VALID option...try again"
-                                        input_incorrect = True
-                        else:
-                                print "Incorrect Value ONLY numbers allowed, please try again"
-                                input_incorrect = True
+class nginx_get:
+    """
+    A class for nginxCtl functionalities
+    """
+    _magento_counter = 1
+
+    def get_conf_parameters(self):
+        """
+        Finds nginx configuration parameters
+
+        :returns: list of nginx configuration parameters
+        """
+        conf = "nginx -V 2>&1 | grep 'configure arguments:'"
+        p = subprocess.Popen(
+            conf, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        output, err = p.communicate()
+        output = re.sub('configure arguments:', '', output)
+        dict = {}
+        for item in output.split(" "):
+            if len(item.split("=")) == 2:
+                dict[item.split("=")[0]] = item.split("=")[1]
+        return dict
 
 
-get_nginx_includes()
-nginx_website_configuration(config_directory_nginx, suffix_nginx)
-document_root(nginx_config_files)
-find_xml_file(NginxDocRoots)
+    def _get_vhosts(self):
+        """
+        get vhosts
+        """
+        ret = []
+        for f in self._get_all_config():
+            ret += self._get_vhosts_info(f)
+        return ret
 
-print ""
-print ""
-print_header()
-XML_option()
-print ""
-print ""
-xml_inspect()
+
+    def _strip_line(self, path, remove=None):
+        """ Removes any trailing semicolons, and all quotes from a string
+        """
+        if remove is None:
+            remove = ['"', "'", ';']
+        for c in remove:
+            if c in path:
+                path = path.replace(c, '')
+
+        return path
+
+
+    def _get_full_path(self, path, root, parent=None):
+        """ Returns a potentially relative path and returns an absolute one
+            either relative to parent or root, whichever exists in that order
+        """
+        if os.path.isabs(path) and os.path.exists(path):
+            return path
+
+        if parent:
+            if os.path.isfile(parent):
+                parent = os.path.dirname(parent)
+            candidate_path = os.path.join(parent, path)
+            if os.path.isabs(candidate_path) and os.path.exists(candidate_path):
+                return candidate_path
+
+        candidate_path = os.path.join(root, path)
+        if os.path.isabs(candidate_path) and os.path.exists(candidate_path):
+            return candidate_path
+
+        return path
+
+
+    def _get_includes_line(self, line, parent, root):
+        """ Reads a config line, starting with 'include', and returns a list
+            of files this include corresponds to. Expands relative paths,
+            unglobs globs etc.
+        """
+        path = self._strip_line(line.split()[1])
+        orig_path = path
+        included_from_dir = os.path.dirname(parent)
+
+        if not os.path.isabs(path):
+            """ Path is relative - first check if path is
+                relative to 'current directory' """
+            path = os.path.join(included_from_dir, self._strip_line(path))
+            if not os.path.exists(os.path.dirname(path)) or not os.path.isfile(path):
+                """ If not, it might be relative to the root """
+                path = os.path.join(root, orig_path)
+
+        if os.path.isfile(path):
+            return [path]
+        elif '/*' not in path and not os.path.exists(path):
+            """ File doesn't actually exist - probably IncludeOptional """
+            return []
+
+        """ At this point we have an absolute path to a basedir which
+            exists, which is globbed
+        """
+        basedir, extension = path.split('/*')
+        try:
+            if extension:
+                return [
+                    os.path.join(basedir, f) for f in os.listdir(
+                        basedir) if f.endswith(extension)]
+
+            return [os.path.join(basedir, f) for f in os.listdir(basedir)]
+        except OSError:
+            return []
+
+
+    def _get_all_config(self, config_file=None):
+        """
+        Reads all config files, starting from the main one, expands all
+        includes and returns all config in the correct order as a list.
+        """
+        config_file = "/etc/nginx/nginx.conf" if config_file is None else config_file
+        ret = [config_file]
+
+        config_data = open(config_file, 'r').readlines()
+
+        for line in [line.strip().strip(';') for line in config_data]:
+            if line.startswith('#'):
+                continue
+            line = line.split('#')[0]
+            if line.startswith('include'):
+                includes = self._get_includes_line(line,
+                                                   config_file,
+                                                   "/etc/nginx/")
+                for include in includes:
+                    try:
+                        ret += self._get_all_config(include)
+                    except IOError:
+                        pass
+        return ret
+
+
+    def _get_vhosts_info(self, config_file):
+        server_block_boundry = []
+        server_block_boundry_list = []
+        vhost_data = open(config_file, "r").readlines()
+        open_brackets = 0
+        found_server_block = False
+        for line_number, line in enumerate(vhost_data):
+            if line.startswith('#'):
+                continue
+            line = line.split('#')[0]
+            line = line.strip().strip(';')
+            if re.match(r"server.*{", line):
+                server_block_boundry.append(line_number)
+                found_server_block = True
+            if '{' in line:
+                open_brackets += 1
+            if '}' in line:
+                open_brackets -= 1
+            if open_brackets == 0 and found_server_block:
+                server_block_boundry.append(line_number)
+                server_block_boundry_list.append(server_block_boundry)
+                server_block_boundry = []
+                found_server_block = False
+
+        server_dict_ret = []
+        for server_block in server_block_boundry_list:
+            alias = []
+            ip_port = []
+            server_name_found = False
+            server_dict = {}
+            for line_num, li in enumerate(vhost_data, start=server_block[0]):
+                l = vhost_data[line_num]
+                if line_num >= server_block[1]:
+                    server_dict['alias'] = alias
+                    server_dict['l_num'] = server_block[0]
+                    server_dict['config_file'] = config_file
+                    server_dict['ip_port'] = ip_port
+                    server_dict_ret.append(server_dict)
+                    server_name_found = False
+                    break
+
+                if l.startswith('#'):
+                    continue
+                l = l.split('#')[0]
+                l = l.strip().strip(';')
+
+                if l.startswith('server_name') and server_name_found:
+                    alias += l.split()[1:]
+
+                if l.startswith('server_name'):
+                    server_dict['servername'] = "default_server_name" if l.split()[1] == "_" else l.split()[1]
+                    server_name_found = True
+                    if len(l.split()) >= 2:
+                        alias += l.split()[2:]
+                if l.startswith('listen'):
+                    ip_port.append(l.split()[1])
+        return server_dict_ret
+
+
+    def get_vhosts(self):
+        vhosts_list = self._get_vhosts()
+        print "%sMagento Sites for Nginx:%s" % (bcolors.WHITE, bcolors.RESET)
+        all_magento_sites = {}
+        for vhost in vhosts_list:
+            ip_ports = vhost['ip_port']
+            for ip_port_x in ip_ports:
+                if '[::]' in ip_port_x:
+                    pattern = re.compile(r'(\[::\]):(\d{2,5})')
+                    pattern_res = re.match(pattern, ip_port_x)
+                    ip = pattern_res.groups()[0]
+                    port = pattern_res.groups()[1]
+                else:
+                    ip_port = ip_port_x.split(':')
+                    try:
+                        ip = ip_port[0]
+                        port = ip_port[1]
+                    except:
+                        ip = '*'
+                        port = ip_port[0]
+                servername = vhost.get('servername', None)
+                serveralias = vhost.get('alias', None)
+                line_number = vhost.get('l_num', None)
+                config_file = vhost.get('config_file', None)
+                _document_root = self.document_root(config_file)
+                _magento = self.find_xml_file(_document_root)
+		if _magento:
+                    _magento = ''.join(_magento)
+#                    all_magento_sites = {_magento_counter:[{
+#                                        'servername': servername,
+#                                        'magento_root': _magento}]}
+                    all_magento_sites[nginx_get._magento_counter] = {}
+                    all_magento_sites[nginx_get._magento_counter]['servername'] = servername
+                    all_magento_sites[nginx_get._magento_counter]['magento_root'] =  _magento
+	            print "%s%s%s  - port %s %s %s %s (%s:%s)" % (bcolors.WHITE,
+                                                            nginx_get._magento_counter,
+                                                            bcolors.RESET,
+                                                            port,
+                                                            bcolors.GREEN,
+                                                            servername,
+                                                            bcolors.RESET,
+                                                            config_file,
+                                                            line_number)
+                    for alias in serveralias:
+                        print "\t\talias %s %s %s" % (bcolors.CYAN,
+                                                      alias,
+                                                     bcolors.RESET)
+                    nginx_get._magento_counter += 1
+        return all_magento_sites
+
+
+    def document_root(self, nginx_files_to_search):
+	nginx_files_to_search = nginx_files_to_search.split()
+        #for i in nginx_files_to_search: print i
+        NginxDocRoots = []
+        root_path = []
+        pattern = re.compile("^\s*root")
+        for i in nginx_files_to_search:
+                with open(i, "r") as search_file:
+                        for line in search_file:
+                                if pattern.match(line.lower()):
+                                        root_path = line.strip()
+                                        root_path = re.split("root ", line, flags=re.IGNORECASE)[1]
+                                        NginxDocRoots.append(root_path)
+                                        NginxDocRoots = [x.rstrip() for x in NginxDocRoots]
+                                        NginxDocRoots = [x.rstrip(';') for x in NginxDocRoots]
+                                        NginxDocRoots = filter(None, NginxDocRoots)
+                                        return NginxDocRoots
+
+
+    def find_xml_file(self, document_root):
+        _app_etc = 'app/etc/'
+        xml_full_path = []
+        convert_path = []
+        nginx_magento_file = []
+        local_xml = "local.xml"
+        for root in document_root:
+            xml_full_path.append(os.path.join(root, _app_etc))
+        for p in xml_full_path:
+                for root, dirs, files in os.walk(p):
+                    if local_xml in files:
+                                nginx_magento_file.append(os.path.join(root, local_xml))
+                                nginx_magento_file = filter(None, nginx_magento_file)
+                                return nginx_magento_file
+
+
+    def select_option(self):
+        vhosts = self.get_vhosts()
+        incorrect = True
+        while incorrect:
+            not_integer = True
+            while not_integer:
+                print ""
+                print "Please select and option: ",
+                tty = open('/dev/tty')
+                option_answer = tty.readline().strip()
+                tty.close()
+                if option_answer.isdigit():
+                    option_answer = int(option_answer)
+                    if ( option_answer ) < nginx_get._magento_counter and ( option_answer > 0 ):
+                        print ""
+                        _answer = vhosts[option_answer]
+                        return _answer.get('magento_root')
+                        incorrect = False
+                        not_integer = False
+                    else:
+                        print "Option number out of range, try again"
+                        print ""
+
+
+
+def main():
+    n = nginx_get()
+	
+    if len(sys.argv) == 1:
+         XML_Parse(n.select_option())
+    else:
+	print "No options available"
+	print "Re-run script with NO options"
+
+
+if __name__ == "__main__":
+    main()
