@@ -269,23 +269,6 @@ class nginx_get:
     """
     _magento_counter = 1
 
-    def get_conf_parameters(self):
-        """
-        Finds nginx configuration parameters
-
-        :returns: list of nginx configuration parameters
-        """
-        conf = "nginx -V 2>&1 | grep 'configure arguments:'"
-        p = subprocess.Popen(
-            conf, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        output, err = p.communicate()
-        output = re.sub('configure arguments:', '', output)
-        dict = {}
-        for item in output.split(" "):
-            if len(item.split("=")) == 2:
-                dict[item.split("=")[0]] = item.split("=")[1]
-        return dict
-
 
     def _get_vhosts(self):
         """
@@ -305,27 +288,6 @@ class nginx_get:
         for c in remove:
             if c in path:
                 path = path.replace(c, '')
-
-        return path
-
-
-    def _get_full_path(self, path, root, parent=None):
-        """ Returns a potentially relative path and returns an absolute one
-            either relative to parent or root, whichever exists in that order
-        """
-        if os.path.isabs(path) and os.path.exists(path):
-            return path
-
-        if parent:
-            if os.path.isfile(parent):
-                parent = os.path.dirname(parent)
-            candidate_path = os.path.join(parent, path)
-            if os.path.isabs(candidate_path) and os.path.exists(candidate_path):
-                return candidate_path
-
-        candidate_path = os.path.join(root, path)
-        if os.path.isabs(candidate_path) and os.path.exists(candidate_path):
-            return candidate_path
 
         return path
 
@@ -406,6 +368,7 @@ class nginx_get:
             line = line.split('#')[0]
             line = line.strip().strip(';')
             if re.match(r"server.*{", line):
+                print line_number
                 server_block_boundry.append(line_number)
                 found_server_block = True
             if '{' in line:
@@ -413,6 +376,7 @@ class nginx_get:
             if '}' in line:
                 open_brackets -= 1
             if open_brackets == 0 and found_server_block:
+                print line_number
                 server_block_boundry.append(line_number)
                 server_block_boundry_list.append(server_block_boundry)
                 server_block_boundry = []
@@ -481,9 +445,6 @@ class nginx_get:
                 _magento = self.find_xml_file(_document_root)
 		if _magento:
                     _magento = ''.join(_magento)
-#                    all_magento_sites = {_magento_counter:[{
-#                                        'servername': servername,
-#                                        'magento_root': _magento}]}
                     all_magento_sites[nginx_get._magento_counter] = {}
                     all_magento_sites[nginx_get._magento_counter]['servername'] = servername
                     all_magento_sites[nginx_get._magento_counter]['magento_root'] =  _magento
@@ -536,6 +497,7 @@ class nginx_get:
                     if local_xml in files:
                                 nginx_magento_file.append(os.path.join(root, local_xml))
                                 nginx_magento_file = filter(None, nginx_magento_file)
+                                print nginx_magento_file
                                 return nginx_magento_file
 
 

@@ -3,49 +3,27 @@
 
 ### Magento Information Gathering
 
-Currently there are 2 versions of this script, 1 for httpd (CentOS/RHEL) and one for nginx (CentOS/RHEL and possible Ubuntu/Debian).
-
-<br />
-There are currently plans to merge the scripts together and "clean" the code. 
-
-<br />
-
-### HTTP
-
-* ONLY works on CentOS/RHEL
-
-This script can be used on a CentOS/RHEL box running apache. It will present you with potential xml files to parse and then as you for your option 
-
-<br />
-Current working version of httpd "Magento Information Gatherer" can be used by running the following command:
-
-
-```
-python <(curl -s https://raw.githubusercontent.com/LukeShirnia/magento_information/master/httpd_magento_information_gathering.py)
-```
-
-This script is only tested on:
-  RHEL 7/CentOS 7 with Httpd 2.4.x
-
-<br />
-
-<br />
-
-### Nginx
-
-* Only tested on CentOS/RHEL...this script may also work with Ubuntu/Debian
+This script is designed to quickly gather information about specific magento sites located on Linux devices. 
 
 <br />
 
 ```
-python <(curl -s https://raw.githubusercontent.com/LukeShirnia/magento_information/master/nginx_magento_information_gathering.py)
+Usage: magento_info.py [option]
 
+Options:
+  -h, --help    show this help message and exit
+  -a, --apache  Check apache webserver for magento sites
+  -n, --nginx   Check nginx webserver for magento sites
 ```
-<br />
+
+
+
+* Works on CentOS/RHEL
+* Designed to work on Ubuntu/Debian...Not yet tested
+
 
 <br />
 
-<br />
 
 ### XML Parsing
 
