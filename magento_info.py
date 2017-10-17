@@ -144,16 +144,29 @@ class get_os_webservers():
             print "You can run the script manually with '--nginx' or '--apache' "
             print _apache
 
-
     def _get_distro(self):
         _web_distro = self.check_os()
+        _web_age = self._web_age()
         if _web_distro == 'centos' or _web_distro == 'rhel':
             apache_server = 'httpd'
-            web_server = self.SystemD(apache_server)
+            if _web_age == 'SystemD':
+                web_server = self.SystemD(apache_server)
+            else:
+                web_server = self.Legacy_init(apache_server)
         elif _web_distro == 'ubuntu' or _web_distro == 'debian':
             apache_server = 'apache2'
-            web_server = self.Legacy_init(apache_server)
+            if _web_age == 'SystemD':
+                web_server = self.SystemD(apache_server)
+            else:
+                web_server = self.Legacy_init(apache_server)
         return web_server
+
+    def _web_age(self):
+        if os.path.exists('/proc/1/comm') and 'systemd' in self.readfile('/proc/1/comm'):
+            age = 'SystemD'
+        else:
+            age = 'Legacy'
+        return age
 
 
 class Systemd(object):
@@ -805,8 +818,11 @@ def main():
             print "2 WebServers running! ", 
             print "Which server would you like to check? "
             option = choose_server(option)
-            n = webserver_Ctl(option)
-            XML_Parse(n.select_option())
+            try:
+                n = webserver_Ctl(option)
+                XML_Parse(n.select_option())
+            except TypeError:
+                print "No Magento Sites appear to be running on this webserver"
         else:
             print "No Webservers appear to be running"
             print "Run with --apache or --nginx to run manually"

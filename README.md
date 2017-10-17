@@ -5,6 +5,15 @@
 
 This script is designed to quickly gather information about specific magento sites located on Linux devices. 
 
+
+`wget https://raw.githubusercontent.com/LukeShirnia/magento_information/master/magento_info.py`
+
+`sha1sum magento.py`
+
+Output:
+
+`9c8f3b9ddbaf8e018f02b39ce3766e8a3abffebe  magento_info.py`
+
 <br />
 
 ```
@@ -17,7 +26,6 @@ Options:
 ```
 
 
-
 * Works on CentOS/RHEL
 * Designed to work on Ubuntu/Debian...Not yet tested
 
@@ -27,7 +35,7 @@ Options:
 
 ### XML Parsing
 
-Run the command below to quickly pull in the details for the local.xml file.
+If you would ONLY like to parse the local.xml file you can use the following script:
 <br />
 Replace "local.xml" in the command below with the full path to your file.
 
