@@ -18,6 +18,196 @@ class bcolors:
     YELLOW = '\033[93m'
 
 
+class get_os_webservers():
+
+    def cmd_output(self, cmdline, silentfail=False):
+        """
+        Run the given command and return the output
+        """
+        p = subprocess.Popen(cmdline, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            if silentfail:
+                return ''
+            else:
+                raise RuntimeError('Error while executing \'%s\': %s' % (cmdline, stderr.strip()))
+        return stdout
+
+
+    def cmd_returncode(self, cmdline):
+        """
+        Run the given command and return it's return code
+        """
+        devnull = open(os.devnull, 'wb')
+        p = subprocess.Popen(cmdline, shell=True, stdout=devnull, stderr=devnull)
+        p.wait()
+        return p.returncode
+
+
+    def file2dict(self, filename, separator='=', valproc=lambda x: x):
+        """
+        Read key-value type config file into a dictionary
+        """
+        f = open(filename)
+        lines = [x.split(separator, 1) for x in f.readlines()]
+        f.close()
+        res = {}
+        for key, val in lines:
+            res[key.strip()] = valproc(val.strip().strip('"'))
+        return res
+
+
+    def readfile(self, filename):
+        """
+        Return the whole contents of the given file
+        """
+        f = open(filename)
+        ret = f.read().strip()
+        f.close()
+        return ret
+
+
+    def check_os(self):
+        if os.path.exists('/etc/redhat-release'):
+            s = self.readfile('/etc/redhat-release')
+            if s.startswith('Red Hat Enterprise Linux'):
+                server_id = 'rhel'
+                server_distr = 'RHEL'
+                return server_id
+            elif s.startswith('CentOS'):
+                server_id = 'centos'
+                server_distro = 'CentOS'
+                return server_id
+            elif s.startswith('Fedora'):
+                server_id = 'fedora'
+                server_distro = 'Fedora'
+                return server_id
+            for i in s.split(' '):
+                if i[0].isdigit():
+                    server_version = i
+                    break
+        elif os.path.exists('/etc/lsb-release'):
+            lsb = self.file2dict('/etc/lsb-release')
+            server_id = lsb['DISTRIB_ID'].lower()
+            server_distro = lsb['DISTRIB_ID']
+            server_version = lsb['DISTRIB_RELEASE']
+            return server_id
+        elif os.path.exists('/etc/os-release'):
+            lsb = self.file2dict('/etc/os-release')
+            server_id = lsb['ID'].lower()
+            server_distro = lsb['ID'].capitalize()
+            server_version = lsb['VERSION']
+            return server_id
+        else:
+            server_id = 'unknown'
+            server_distro = 'Unknown Distro'
+            server_version = 'Unknown Version'
+            return server_id
+
+
+    def SystemD(self, _apache):
+        s = Systemd()
+        if s.service_running('nginx') and s.service_running(_apache) == False:
+            web_server = []
+            web_server = ['nginx']
+            return web_server
+        elif s.service_running(_apache) and s.service_running('nginx') == False:
+            web_server = []
+            web_server = ['httpd']
+            return web_server
+        elif s.service_running(_apache) and s.service_running('nginx'):
+            web_server = []
+            web_server = ['httpd', 'nginx']
+            return web_server
+        else:
+            print "Non-legacy"
+            print "No web servers appear to be running"
+            print "You can run the script manually with '--nginx' or '--apache' "
+            print _apache
+
+
+    def Legacy_init(self, _apache):
+        l = LegacyInit()
+        if l.service_running('nginx') and l.service_running(_apache) == False:
+            web_server = 'nginx'
+            return web_server
+        elif l.service_running(_apache) and l.service_running('nginx') == False:
+            web_server = 'apache'
+            return web_server
+        elif l.service_running(_apache) and l.service_running('nginx'):
+            web_server = []
+            web_server = ['apache2', 'nginx']
+            return web_server
+        else:
+            print "Legacy"
+            print "No web servers appear to be running"
+            print "You can run the script manually with '--nginx' or '--apache' "
+            print _apache
+
+
+    def _get_distro(self):
+        _web_distro = self.check_os()
+        if _web_distro == 'centos' or _web_distro == 'rhel':
+            apache_server = 'httpd'
+            web_server = self.SystemD(apache_server)
+        elif _web_distro == 'ubuntu' or _web_distro == 'debian':
+            apache_server = 'apache2'
+            web_server = self.Legacy_init(apache_server)
+        return web_server
+
+
+class Systemd(object):
+    """
+    Systemd (systemctl) wrapper
+    """
+    def list_services(self):
+        ret = []
+        cmd = 'systemctl -l --plain --no-legend list-units --all --type service | tr -s " "'
+        for line in cmd_output_iter(cmd):
+            (unit, load, active, sub, description) = line.strip().split(' ', 4)
+            ret.append(unit[:-8])
+        return ret
+
+    def _service_is(self, what, svc):
+        cmd = 'systemctl is-%s %s.service' % (what, svc)
+        return get_os_webservers().cmd_output(cmd, silentfail=True).strip() == what
+
+    def service_running(self, svc):
+        return self._service_is('active', svc)
+
+
+
+class LegacyInit(object):
+    """
+    SystemV and Upstart wrapper
+    """
+    def list_services(self):
+        return list(os.listdir('/etc/init.d'))
+
+    def service_enabled(self, svc):
+        upstart = False
+        for upstartf in ('/etc/init/%s.override', '/etc/init/%s.conf'):
+            if os.path.exists(upstartf % svc):
+                upstart = True
+                f = open(upstartf % svc)
+                for line in f:
+                    if line.split(' ')[0].strip() == 'manual':
+                        return False
+                f.close()
+        if upstart:
+            return True
+
+        for s in os.listdir('/etc/rc3.d'):
+            if s[0] == 'S' and s[3:] == svc:
+                return True
+        return False
+
+    def service_running(self, svc):
+        cmd = 'service %s status' % svc
+        return get_os_webservers().cmd_returncode(cmd) == 0
+
+
+
 class XML_Parse(object):
     def __init__(self, arg):
         self.local_xml = arg
@@ -379,7 +569,6 @@ class webserver_Ctl(object):
             line = line.split('#')[0]
             line = line.strip().strip(';')
             if re.match(r"(%s) *"%self.re_start_match, line):
-            #if re.match(r"server.*{", line):
                 server_block_boundry.append(line_number)
                 found_server_block = True
             if self.StartsWith in line:
@@ -399,7 +588,6 @@ class webserver_Ctl(object):
             server_name_found = False
             server_dict = {}
             for line_num, li in enumerate(vhost_data):
-            #for line_num, li in enumerate(vhost_data, start=server_block[0]):
                 l = vhost_data[line_num]
                 if line_num >= server_block[1]:
                     server_dict['alias'] = alias
@@ -555,6 +743,26 @@ class webserver_Ctl(object):
                         print "Option number out of range, try again"
                         print ""
 
+def choose_server(options):
+    counter = len(options)
+    for i in range(1, counter+1):
+        print "%s\t%s" % (i, options[i-1])
+    print "Select option ",
+    tty = open('/dev/tty')
+    option_answer = tty.readline().strip()
+    tty.close()
+    if option_answer.isdigit():
+        option_answer = int(option_answer)
+        if ( option_answer - 1 ) < counter and ( option_answer > 0 ):
+            print ""
+            _answer = options[option_answer - 1]
+            return _answer
+            incorrect = False
+            not_integer = False
+        else:
+            print "Option number out of range, try again"
+            print ""
+
 
 def main():
     parser = OptionParser(usage='usage: %prog [option]')
@@ -587,17 +795,22 @@ def main():
                 print ""
                 print "Apache does not appear to be running or has no any magento sites"
     elif len(sys.argv) == 1:
-        print ""
-        print "No options selected, defaulting to apache"
-        print ""
-        option = 'httpd'
-        n = webserver_Ctl(option)
-        try:
+        _web = get_os_webservers()
+        option = _web._get_distro()
+        if len(option) == 1:
+            option = ''.join(option)
+            n = webserver_Ctl(option)
             XML_Parse(n.select_option())
-        except:
-            print "Please specify a web server to run against"
+        elif len(option) == 2:
+            print "2 WebServers running! ", 
+            print "Which server would you like to check? "
+            option = choose_server(option)
+            n = webserver_Ctl(option)
+            XML_Parse(n.select_option())
+        else:
+            print "No Webservers appear to be running"
+            print "Run with --apache or --nginx to run manually"
             print ""
-            print parser.print_help()
 
 
 if __name__ == "__main__":
