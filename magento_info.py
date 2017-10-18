@@ -223,7 +223,10 @@ class LegacyInit(object):
 
 class XML_Parse(object):
     def __init__(self, arg):
-        self.local_xml = arg
+        self.local_xml = arg['magento_root']
+        self.s_name = arg['servername']
+        self.doc_root = arg['document_root']
+        self.magento_config = arg['config_file']
         self._xml_check()
     
     def replace_CDATA(self, xml_variable):
@@ -264,11 +267,10 @@ class XML_Parse(object):
         '''
         admin = re.search("<frontName>(.*)</frontName>",line)
         if admin:
-            print "-" * 50
+            #print "-" * 50
             admin = str(admin.group(1))
             admin = self.replace_CDATA(admin)
-            print bcolors.GREEN + "Admin URL:" + bcolors.RESET , admin
-            print "-" * 50
+            print "{0}Admin URL:{1:>8}{2}".format(bcolors.GREEN, bcolors.RESET, admin)
             print ""
     
     def db_connection(self):
@@ -441,10 +443,19 @@ class XML_Parse(object):
             find_full_page_password = str(find_full_page_password.group(1))
             find_full_page_password = self.replace_CDATA(find_full_page_password)
             print bcolors.YELLOW + "Password :" + bcolors.RESET, find_full_page_password
-    
+   
+
+    def vhost_information(self):
+        print '{0}Domain:{1:>11}{2}'.format(bcolors.YELLOW, bcolors.RESET,
+                                        self.s_name)
+        print '{0}DocumentRoot:{1:>5}{2}'.format(bcolors.YELLOW, bcolors.RESET,
+                                        self.doc_root)
+        print '{0}Config File:{1:6}{2}'.format(bcolors.YELLOW, bcolors.RESET,
+                                        self.magento_config)
+
+ 
     def _xml_check(self):
-        #self.XML_Parse(xml_file)
-        #print ""
+        self.vhost_information()
         self.admin_url()
         self.db_connection()
         print ""
@@ -455,6 +466,7 @@ class XML_Parse(object):
 
 
 class webserver_Ctl(object):
+        
 
     def __init__(self, arg):
         self.magento_counter = 1
@@ -680,7 +692,10 @@ class webserver_Ctl(object):
             _magento = self.find_xml_file(_document_root)
             if _magento:
                 _magento = ''.join(_magento)
+                _document_root = ''.join(_document_root)
                 all_magento_sites[self.magento_counter] = {}
+                all_magento_sites[self.magento_counter]['config_file'] = config_file
+                all_magento_sites[self.magento_counter]['document_root'] = _document_root 
                 all_magento_sites[self.magento_counter]['servername'] = servername
                 all_magento_sites[self.magento_counter]['magento_root'] = _magento
                 print "%s%s%s - port %s %s %s %s (%s:%s)" % (bcolors.WHITE,
@@ -736,6 +751,7 @@ class webserver_Ctl(object):
     def select_option(self):
         vhosts = self.get_vhosts()
         incorrect = True
+        option_information = {}
         while incorrect:
             not_integer = True
             while not_integer:
@@ -749,12 +765,13 @@ class webserver_Ctl(object):
                     if ( option_answer ) < self.magento_counter and ( option_answer > 0 ):
                         print ""
                         _answer = vhosts[option_answer]
-                        return _answer.get('magento_root')
+                        return _answer
                         incorrect = False
                         not_integer = False
                     else:
                         print "Option number out of range, try again"
                         print ""
+
 
 def choose_server(options):
     counter = len(options)
@@ -806,7 +823,7 @@ def main():
                 XML_Parse(n.select_option())
             except:
                 print ""
-                print "Apache does not appear to be running or has no any magento sites"
+                print "Apache does not appear to have any magento sites"
     elif len(sys.argv) == 1:
         _web = get_os_webservers()
         option = _web._get_distro()
@@ -820,7 +837,8 @@ def main():
             option = choose_server(option)
             try:
                 n = webserver_Ctl(option)
-                XML_Parse(n.select_option())
+                site_dict = n.select_option()
+                XML_Parse(site_dict)
             except TypeError:
                 print "No Magento Sites appear to be running on this webserver"
         else:
