@@ -480,7 +480,8 @@ class webserver_Ctl(object):
             self.listen_port = 'listen'
             self.port_split = ''
             self.EndsWith =  '}'
-            self.re_start_match = 'root '
+            self.re_start_match = 'server '
+#            self.re_start_match = 'root '
             self.web_path = '/etc/nginx'
         elif self.webserver == 'httpd':
             if os.path.isfile('/etc/httpd/conf/httpd.conf'):
@@ -527,22 +528,15 @@ class webserver_Ctl(object):
         included_from_dir = os.path.dirname(parent)
 
         if not os.path.isabs(path):
-            """ Path is relative - first check if path is
-                relative to 'current directory' """
             path = os.path.join(included_from_dir, self._strip_line(path))
             if not os.path.exists(os.path.dirname(path)) or not os.path.isfile(path):
-                """ If not, it might be relative to the root """
                 path = os.path.join(root, orig_path)
 
         if os.path.isfile(path):
             return [path]
         elif '/*' not in path and not os.path.exists(path):
-            """ File doesn't actually exist - probably IncludeOptional """
             return []
 
-        """ At this point we have an absolute path to a basedir which
-            exists, which is globbed
-        """
         basedir, extension = path.split('/*')
         try:
             if extension:
@@ -613,37 +607,38 @@ class webserver_Ctl(object):
             server_name_found = False
             server_dict = {}
             for line_num, li in enumerate(vhost_data):
-                l = vhost_data[line_num]
-                if line_num >= server_block[1]:
-                    server_dict['alias'] = alias
-                    server_dict['l_num'] = server_block[0]
-                    server_dict['config_file'] = config_file
-                    server_dict['ip_port'] = ip_port
-                    server_dict_ret.append(server_dict)
-                    server_name_found = False
-                    break
-
-                if l.startswith('#'):
-                    continue
-                l = l.split('#')[0]
-                l = l.strip().strip(';')
-
-                if l.startswith(self.webServerAlias) and server_name_found:
-                    alias += l.split()[1:]
-
-                if l.startswith(self.webServerName):
-                    if l.split()[1] == "_":
-                        server_dict['servername'] = "default_server_name"
-                    else:
-                        server_dict['servername'] = l.split()[1]
-                    server_name_found = True
-                    if len(l.split()) >= 2:
-                        alias += l.split()[2:]
-                if l.startswith(self.listen_port):
-                    if self.webserver == 'nginx':
-                        ip_port.append(l.split()[1])
-                    elif self.webserver == 'httpd':
-                        ip_port.append(l.split(':')[1].strip('>'))
+                if line_num >= server_block[0]:
+                    l = vhost_data[line_num]
+                    if line_num >= server_block[1]:
+                        server_dict['alias'] = alias
+                        server_dict['l_num'] = server_block[0]
+                        server_dict['config_file'] = config_file
+                        server_dict['ip_port'] = ip_port
+                        server_dict_ret.append(server_dict)
+                        server_name_found = False
+                        break
+    
+                    if l.startswith('#'):
+                        continue
+                    l = l.split('#')[0]
+                    l = l.strip().strip(';')
+    
+                    if l.startswith(self.webServerAlias) and server_name_found:
+                        alias += l.split()[1:]
+    
+                    if l.startswith(self.webServerName):
+                        if l.split()[1] == "_":
+                            server_dict['servername'] = "default_server_name"
+                        else:
+                            server_dict['servername'] = l.split()[1]
+                        server_name_found = True
+                        if len(l.split()) >= 2:
+                            alias += l.split()[2:]
+                    if l.startswith(self.listen_port):
+                        if self.webserver == 'nginx':
+                            ip_port.append(l.split()[1])
+                        elif self.webserver == 'httpd':
+                            ip_port.append(l.split(':')[1].strip('>'))
         return server_dict_ret
 
     def sort_sites_dict(self, vhost_list):
@@ -684,35 +679,36 @@ class webserver_Ctl(object):
                     ip = '*'
                     port = ip_port[0]
             servername = vhost.get('servername', None)
-            serveralias = vhost.get('alias', None)
-            serveralias = set(serveralias)
-            line_number = vhost.get('l_num', None)
-            config_file = vhost.get('config_file', None)
-            _document_root = self.document_root(config_file)
-            _magento = self.find_xml_file(_document_root)
-            if _magento:
-                _magento = ''.join(_magento)
-                _document_root = ''.join(_document_root)
-                all_magento_sites[self.magento_counter] = {}
-                all_magento_sites[self.magento_counter]['config_file'] = config_file
-                all_magento_sites[self.magento_counter]['document_root'] = _document_root 
-                all_magento_sites[self.magento_counter]['servername'] = servername
-                all_magento_sites[self.magento_counter]['magento_root'] = _magento
-                print "%s%s%s - port %s %s %s %s (%s:%s)" % (bcolors.WHITE,
-                                                        self.magento_counter,
-                                                        bcolors.RESET,
-                                                        ip_port,
-                                                        bcolors.GREEN,
-                                                        servername,
-                                                        bcolors.RESET,
-                                                        config_file,
-                                                        line_number)
-                for alias in serveralias:
-                    if alias != servername:
-                        print "\t\talias %s %s %s" % (bcolors.CYAN,
-                                                      alias,
-                                                      bcolors.RESET)
-                self.magento_counter += 1
+            if servername != None: # catches ssl.conf etc which has no servername
+                serveralias = vhost.get('alias', None)
+                serveralias = set(serveralias)
+                line_number = vhost.get('l_num', None)
+                config_file = vhost.get('config_file', None)
+                _document_root = self.document_root(config_file)
+                _magento = self.find_xml_file(_document_root)
+                if _magento:
+                    _magento = ''.join(_magento)
+                    _document_root = ''.join(_document_root)
+                    all_magento_sites[self.magento_counter] = {}
+                    all_magento_sites[self.magento_counter]['config_file'] = config_file
+                    all_magento_sites[self.magento_counter]['document_root'] = _document_root 
+                    all_magento_sites[self.magento_counter]['servername'] = servername
+                    all_magento_sites[self.magento_counter]['magento_root'] = _magento
+                    print "%s%s%s - port %s %s %s %s (%s:%s)" % (bcolors.WHITE,
+                                                            self.magento_counter,
+                                                            bcolors.RESET,
+                                                            ip_port,
+                                                            bcolors.GREEN,
+                                                            servername,
+                                                            bcolors.RESET,
+                                                            config_file,
+                                                            line_number)
+                    for alias in serveralias:
+                        if alias != servername:
+                            print "\t\talias %s %s %s" % (bcolors.CYAN,
+                                                          alias,
+                                                          bcolors.RESET)
+                    self.magento_counter += 1
         return all_magento_sites
 
     def document_root(self, webserver_files_to_search):
@@ -721,6 +717,7 @@ class webserver_Ctl(object):
 #        del _doc_roots[:]
         root_path = []
         pattern = re.compile("^\s*(%s)"%self.doc_root_name )
+#        pattern = re.compile("^\s*documentroot" )
         for i in webserver_files_to_search:
                 with open(i, "r") as search_file:
                         for line in search_file:
