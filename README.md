@@ -12,8 +12,7 @@ This script is designed to quickly gather information about specific magento sit
 
 Output:
 
-`e11ecb9852709a60829c44cf40c744c54ab24ded  magento_info.py`
-
+`37009dfdf9c8936b9d68d680476010bcfa9b6eaa  magento_info.py`
 
 <br />
 
