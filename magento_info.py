@@ -469,7 +469,6 @@ class webserver_Ctl(object):
         
 
     def __init__(self, arg1, arg2):
-#        self.magento_counter = 1
         self.webserver = arg1
         self.magento_counter = arg2
         if self.webserver == 'nginx':
@@ -482,7 +481,6 @@ class webserver_Ctl(object):
             self.port_split = ''
             self.EndsWith =  '}'
             self.re_start_match = 'server '
-#            self.re_start_match = 'root '
             self.web_path = '/etc/nginx'
         elif self.webserver == 'httpd':
             if os.path.isfile('/etc/httpd/conf/httpd.conf'):
@@ -501,6 +499,7 @@ class webserver_Ctl(object):
             self.re_start_match = '<VirtualHost'
         else:
             print 'error'
+            print "Web Server Wrong: ", self.webserver, self.magento_counter
             sys.exit(1)
 
 
@@ -739,10 +738,8 @@ class webserver_Ctl(object):
     def document_root(self, webserver_files_to_search):
         webserver_files_to_search = webserver_files_to_search.split()
         _doc_roots = []
-#        del _doc_roots[:]
         root_path = []
         pattern = re.compile("^\s*(%s)"%self.doc_root_name )
-#        pattern = re.compile("^\s*documentroot" )
         for i in webserver_files_to_search:
                 with open(i, "r") as search_file:
                         for line in search_file:
@@ -790,9 +787,9 @@ class SelectAnOption(object):
                      vhost_httpd = w.get_vhosts()
                 self.magento_counter = w.return_counter()
             vhosts = self.combine_site_information(vhost_nginx, vhost_httpd)
-            
         else:
-            w = webserver_Ctl(self.option)
+            self.option = ''.join(self.option)
+            w = webserver_Ctl(self.option, self.magento_counter)
             vhosts = w.get_vhosts()
         magento_counter = w.return_counter()
         incorrect = True
@@ -882,20 +879,21 @@ def main():
         _web = get_os_webservers()
         option = _web._get_distro()
         if len(option) == 1:
-            option = ''.join(option)
-            n = webserver_Ctl(option)
-            XML_Parse(n.select_option())
+            try:
+                n = SelectAnOption(option)
+                site_dict = n.select_option()
+                XML_Parse(site_dict)
+            except TypeError:
+                print "No Magento Sites appear to be running on this webserver"
         elif len(option) == 2:
             print "2 WebServers running! " 
-#            print "Which server would you like to check? "
-#            option = choose_server(option)
             option = "both"
-#            try:
-            n = SelectAnOption(option)
-            site_dict = n.select_option()
-            XML_Parse(site_dict)
-#            except TypeError:
-#                print "No Magento Sites appear to be running on this webserver"
+            try:
+                n = SelectAnOption(option)
+                site_dict = n.select_option()
+                XML_Parse(site_dict)
+            except TypeError:
+                print "No Magento Sites appear to be running on this webserver"
         else:
             print "No Webservers appear to be running"
             print "Run with --apache or --nginx to run manually"
