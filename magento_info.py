@@ -468,9 +468,10 @@ class XML_Parse(object):
 class webserver_Ctl(object):
         
 
-    def __init__(self, arg):
-        self.magento_counter = 1
-        self.webserver = arg
+    def __init__(self, arg1, arg2):
+#        self.magento_counter = 1
+        self.webserver = arg1
+        self.magento_counter = arg2
         if self.webserver == 'nginx':
             self.webserver_config = '/etc/nginx/nginx.conf'
             self.doc_root_name = 'root '
@@ -501,6 +502,7 @@ class webserver_Ctl(object):
         else:
             print 'error'
             sys.exit(1)
+
 
     def _get_vhosts(self):
         """
@@ -646,20 +648,43 @@ class webserver_Ctl(object):
         for i in range(0, length):
             for b in range(1, length):
                 try:
+#                    if vhost_list[i]['config_file'] == vhost_list[b]['config_file']:
+#                       print vhost_list[i]['config_file'], vhost_list[b]['config_file']
+#                       print "config_match"
+#                    for r in vhost_list[i]['alias']:
+#                        print r, vhost_list[b]['servername']
+#                        if r == vhost_list[b]['servername']:
+#                            print "alias"
+#                    for l in vhost_list[b]['alias']:
+#                        print l, vhost_list[i]['servername']
+#                        if b in vhost_list[i]['servername']:
+#                            print "alias2"
+#                    for sba in vhost_list[b]['alias']:
+#                       for sib in vhost_list[i]['alias']:
+#                           if sba == sib:
+#                                print "match"
+ #                               print sba, sib
                     if vhost_list[i]['servername'] == vhost_list[b]['servername']:
                         if len(vhost_list[i]['ip_port']) >= len(vhost_list[b]['ip_port']):
+#                            print 'del 1'
                             del vhost_list[int(b)]
                         elif  len(vhost_list[b]['ip_port']) >  len(vhost_list[i]['ip_port']):
                             del vhost_list[int(i)]
+#                            print "del 2"
                         else:
+                            print "continue.."
                             continue
+#                    if vhost_list[i]['servername'] in vhost_list[b]['alias']:
+#                        print "alias"
                 except:
                     return vhost_list
         return vhost_list
 
     def get_vhosts(self):
         vhosts_list = self._get_vhosts()
-        print "%sMagento Site Configuration:%s" % (bcolors.WHITE, bcolors.RESET)
+        print ""
+        print "%sMagento Site Configuration for %s:%s" % (bcolors.YELLOW, self.webserver, bcolors.RESET)
+        print ""
         all_magento_sites = {}
         vhosts_list = self.sort_sites_dict(vhosts_list)
         for vhost in vhosts_list:
@@ -745,8 +770,31 @@ class webserver_Ctl(object):
                                 webserver_magento_file = filter(None, webserver_magento_file)
                                 return webserver_magento_file
 
+    def return_counter(self):
+        return self.magento_counter
+
+
+class SelectAnOption(object):
+
+    def __init__(self, arg):
+        self.option = arg
+        self.magento_counter = 1 
+
     def select_option(self):
-        vhosts = self.get_vhosts()
+        if self.option == "both":
+            for i in ['nginx', 'httpd']:
+                w = webserver_Ctl(i, self.magento_counter)
+                if i == "nginx":
+                     vhost_nginx = w.get_vhosts()
+                else:
+                     vhost_httpd = w.get_vhosts()
+                self.magento_counter = w.return_counter()
+            vhosts = self.combine_site_information(vhost_nginx, vhost_httpd)
+            
+        else:
+            w = webserver_Ctl(self.option)
+            vhosts = w.get_vhosts()
+        magento_counter = w.return_counter()
         incorrect = True
         option_information = {}
         while incorrect:
@@ -757,10 +805,10 @@ class webserver_Ctl(object):
                 tty = open('/dev/tty')
                 option_answer = tty.readline().strip()
                 tty.close()
+                print ""
                 if option_answer.isdigit():
                     option_answer = int(option_answer)
-                    if ( option_answer ) < self.magento_counter and ( option_answer > 0 ):
-                        print ""
+                    if ( option_answer ) < magento_counter and ( option_answer > 0 ):
                         _answer = vhosts[option_answer]
                         return _answer
                         incorrect = False
@@ -768,6 +816,15 @@ class webserver_Ctl(object):
                     else:
                         print "Option number out of range, try again"
                         print ""
+
+    def combine_site_information(self, vhost_nginx, vhost_httpd):
+        entry = int( len(vhost_nginx) + 1 )
+        
+        for y in vhost_httpd:
+            vhost_nginx[entry] = vhost_httpd[y]
+            entry = entry + 1
+        return vhost_nginx           
+
 
 
 def choose_server(options):
@@ -829,15 +886,16 @@ def main():
             n = webserver_Ctl(option)
             XML_Parse(n.select_option())
         elif len(option) == 2:
-            print "2 WebServers running! ", 
-            print "Which server would you like to check? "
-            option = choose_server(option)
-            try:
-                n = webserver_Ctl(option)
-                site_dict = n.select_option()
-                XML_Parse(site_dict)
-            except TypeError:
-                print "No Magento Sites appear to be running on this webserver"
+            print "2 WebServers running! " 
+#            print "Which server would you like to check? "
+#            option = choose_server(option)
+            option = "both"
+#            try:
+            n = SelectAnOption(option)
+            site_dict = n.select_option()
+            XML_Parse(site_dict)
+#            except TypeError:
+#                print "No Magento Sites appear to be running on this webserver"
         else:
             print "No Webservers appear to be running"
             print "Run with --apache or --nginx to run manually"
