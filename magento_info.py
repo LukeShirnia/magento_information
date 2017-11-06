@@ -878,7 +878,9 @@ def main():
     elif len(sys.argv) == 1:
         _web = get_os_webservers()
         option = _web._get_distro()
-        if len(option) == 1:
+        if option == None:
+            sys.exit(1)
+        elif len(option) == 1:
             try:
                 n = SelectAnOption(option)
                 site_dict = n.select_option()
