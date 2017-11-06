@@ -486,9 +486,9 @@ class webserver_Ctl(object):
             if os.path.isfile('/etc/httpd/conf/httpd.conf'):
                 self.webserver_config = '/etc/httpd/conf/httpd.conf'
                 self.web_path = '/etc/httpd'
-            elif os.path.isfile('/etc/apache/apache.conf'):
-                self.webserver_config = '/etc/apache/apache.conf'
-                self.web_path = '/etc/apache'
+            elif os.path.isfile('/etc/apache2/apache2.conf'):
+                self.webserver_config = '/etc/apache2/apache2.conf'
+                self.web_path = '/etc/apache2'
             self.doc_root_name = 'documentroot '
             self.webServerName = 'ServerName'
             self.webServerAlias = 'ServerAlias'
