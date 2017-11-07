@@ -27,21 +27,16 @@ Options:
 ```
 
 
-* Works on CentOS/RHEL
-* Designed to work on Ubuntu/Debian...Not yet tested
+* CentOS/RHEL 5, 6, 7 compatible
+* Ubuntu/Debian 12, 14, 16.04LTS compatible
 
 
 <br />
-
-
-### XML Parsing
 
 If you would ONLY like to parse the local.xml file you can use the following script:
 <br />
 Replace "local.xml" in the command below with the full path to your file.
 
-
 ```
-curl -s https://raw.githubusercontent.com/LukeShirnia/magento_information/master/Parsing_XML.py | python - local.xml
+python magento -x local.xml
 ```
-
