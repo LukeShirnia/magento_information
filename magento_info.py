@@ -273,7 +273,7 @@ class XML_Parse(object):
             #print "-" * 50
             admin = str(admin.group(1))
             admin = self.replace_CDATA(admin)
-            print "{0}Admin URL:{1:>8}{2}".format(bcolors.GREEN, bcolors.RESET, admin)
+            print "{0}Admin URL:{1:>8}https://{2}/{3}".format(bcolors.YELLOW, bcolors.RESET, self.s_name, admin)
             print ""
     
     def db_connection(self):
@@ -281,9 +281,9 @@ class XML_Parse(object):
         Start "recording" once the <connection> tag is found. 
         Every line is then searched in the db_information() function
         '''
-        print "-" * 50
+#        print "-" * 50
         print bcolors.CYAN + "DATABASE INFORMATION" + bcolors.RESET
-        print "-" * 50
+#        print "-" * 50
         with open(self.local_xml) as infile:
             record = False
             for line in infile:
@@ -324,9 +324,9 @@ class XML_Parse(object):
         '''
         Check to see where sessions are saved. Run different functions depending on the session location
         '''
-        print "-" * 50
+#        print "-" * 50
         print bcolors.CYAN + "SESSION INFORMATION" + bcolors.RESET
-        print "-" * 50
+#        print "-" * 50
         with open(self.local_xml) as infile:
             for line in infile:
                 line = self.replace_session_CDATA(line)
@@ -427,9 +427,9 @@ class XML_Parse(object):
         find_full_page_db_number = re.search("<database>(.*)</database>", line)
         find_full_page_password = re.search("<password>(.*)</password>", line)
         if find_full_page_service or find_full_page_service_legacy:
-            print "-" * 50
+#            print "-" * 50
             print bcolors.CYAN + "FULL PAGE CACHE" + bcolors.RESET
-            print "-" * 50
+#            print "-" * 50
             find_full_page_service = str(find_full_page_service.group(1))
             print bcolors.YELLOW + "Service  :" + bcolors.RESET, find_full_page_service
         if find_full_page_server:
@@ -873,20 +873,23 @@ def main():
     manual_xml = ["-x", "--xml"]
     (options, args) = parser.parse_args()
     if len(sys.argv) == 2:
+        magento_counter = 1
         select_option = sys.argv[1:]
         select_option = select_option[0]
         if select_option == '-n' or select_option == '--nginx':
             option = 'nginx'
-            n = webserver_Ctl(option) 
+            n = SelectAnOption(option)
+            site_dict = n.select_option()
             try:
-                XML_Parse(n.select_option())
+                XML_Parse(site_dict)
             except:
                 print "Nginx does not appear to have any magento sites"
         elif select_option == '-a' or select_option == '--apache':
             option = 'httpd'
-            n = webserver_Ctl(option)
+            n = SelectAnOption(option)
+            site_dict = n.select_option()
             try:
-                XML_Parse(n.select_option())
+                XML_Parse(site_dict)
             except:
                 print ""
                 print "Apache does not appear to have any magento sites"
