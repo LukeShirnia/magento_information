@@ -223,10 +223,13 @@ class LegacyInit(object):
 
 class XML_Parse(object):
     def __init__(self, arg):
-        self.local_xml = arg['magento_root']
-        self.s_name = arg['servername']
-        self.doc_root = arg['document_root']
-        self.magento_config = arg['config_file']
+        if len(arg) == 4:
+            self.local_xml = arg['magento_root']
+            self.s_name = arg['servername']
+            self.doc_root = arg['document_root']
+            self.magento_config = arg['config_file']
+        else:
+            self.local_xml = arg
         self._xml_check()
     
     def replace_CDATA(self, xml_variable):
@@ -310,7 +313,8 @@ class XML_Parse(object):
             if find_db_password:
                 find_db_password = str(find_db_password.group(1))
                 find_db_password = self.replace_CDATA(find_db_password)
-                print bcolors.YELLOW + "Password  :" + bcolors.RESET, find_db_password
+                if find_db_password != "":
+                    print bcolors.YELLOW + "Password  :" + bcolors.RESET, find_db_password
             if find_db_dbname:
                 find_db_dbname = str(find_db_dbname.group(1))
                 find_db_dbname = self.replace_CDATA(find_db_dbname)
@@ -388,7 +392,8 @@ class XML_Parse(object):
         if find_session_password:
             find_session_password = str(find_session_password.group(1))
             find_session_password = self.replace_CDATA(find_session_password)
-            print bcolors.YELLOW + "Password  :" + bcolors.RESET, find_session_password
+            if find_session_password != "":
+                print bcolors.YELLOW + "Password  :" + bcolors.RESET, find_session_password
         if find_databases_number:
             find_databases_number = str(find_databases_number.group(1))
             find_databases_number = self.replace_CDATA(find_databases_number)
@@ -442,7 +447,8 @@ class XML_Parse(object):
         if find_full_page_password:
             find_full_page_password = str(find_full_page_password.group(1))
             find_full_page_password = self.replace_CDATA(find_full_page_password)
-            print bcolors.YELLOW + "Password :" + bcolors.RESET, find_full_page_password
+            if find_full_page_password != "":
+                print bcolors.YELLOW + "Password :" + bcolors.RESET, find_full_page_password
    
 
     def vhost_information(self):
@@ -455,7 +461,10 @@ class XML_Parse(object):
 
  
     def _xml_check(self):
-        self.vhost_information()
+        try:
+            self.vhost_information()
+        except:
+            print ""
         self.admin_url()
         self.db_connection()
         print ""
@@ -812,7 +821,8 @@ class SelectAnOption(object):
                         not_integer = False
                     else:
                         print "Option number out of range, try again"
-                        print ""
+                else:
+                    print "Please enter ONLY a VALID number"
 
     def combine_site_information(self, vhost_nginx, vhost_httpd):
         entry = int( len(vhost_nginx) + 1 )
@@ -850,12 +860,17 @@ def main():
     parser.add_option("-a", "--apache",
                     action="store_false",
                     default=True,
-                    help="Check apache webserver for magento sites")
+                    help="Manually check apache webserver for magento sites")
     parser.add_option("-n", "--nginx",
                     action="store_false",
                     dest="nginx",
-                    help="Check nginx webserver for magento sites")
-
+                    help="Manually check nginx webserver for magento sites")
+    parser.add_option("-x", "--xml",
+                    action="store",
+                    dest="file",
+                    metavar="file",
+                    help="Manually parse magento local.xml file")
+    manual_xml = ["-x", "--xml"]
     (options, args) = parser.parse_args()
     if len(sys.argv) == 2:
         select_option = sys.argv[1:]
@@ -898,7 +913,12 @@ def main():
             print "No Webservers appear to be running"
             print "Run with --apache or --nginx to run manually"
             print ""
-
+    elif len(sys.argv) == 3 and sys.argv[1] in manual_xml:
+        try:
+            XML_File = sys.argv[2]
+            XML_Parse(XML_File)
+        except:
+            print "Error with manual parsing option"
 
 if __name__ == "__main__":
     try:
