@@ -20,9 +20,10 @@ Output:
 Usage: magento_info.py [option]
 
 Options:
-  -h, --help    show this help message and exit
-  -a, --apache  Check apache webserver for magento sites
-  -n, --nginx   Check nginx webserver for magento sites
+  -h, --help           show this help message and exit
+  -a, --apache         Manually check apache webserver for magento sites
+  -n, --nginx          Manually check nginx webserver for magento sites
+  -x file, --xml=file  Manually parse magento local.xml file
 ```
 
 
