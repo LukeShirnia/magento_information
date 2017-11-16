@@ -3,6 +3,8 @@
 
 ### Magento Information Gathering
 
+Note:Currently only works with magento 1.x
+
 This script is designed to quickly gather information about specific magento sites located on Linux devices. 
 
 
