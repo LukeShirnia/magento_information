@@ -592,6 +592,7 @@ class webserver_Ctl(object):
         vhost_data = open(config_file, "r").readlines()
         open_brackets = 0
         found_server_block = False
+        stored = ''
         for line_number, line in enumerate(vhost_data):
             if line.startswith('#'):
                 continue
@@ -631,8 +632,19 @@ class webserver_Ctl(object):
                     if l.startswith('#'):
                         continue
                     l = l.split('#')[0]
-                    l = l.strip().strip(';')
-    
+
+                    if self.webserver == 'nginx':
+                        if not l.strip().endswith(';'):
+                            if line_num != server_block[0]:
+                                stored += l.strip() + ' '
+                            continue
+                        else:
+                            l = stored + l
+                            l = l.strip().strip(';')
+                            stored = ''
+                    else:
+                        l = l.strip().strip(';')
+
                     if l.startswith(self.webServerAlias) and server_name_found:
                         alias += l.split()[1:]
     
@@ -807,7 +819,7 @@ class SelectAnOption(object):
             not_integer = True
             while not_integer:
                 print ""
-                print "Please select and option: ",
+                print "Please select an option between 1-%s: " % ( magento_counter - 1 ), 
                 tty = open('/dev/tty')
                 option_answer = tty.readline().strip()
                 tty.close()
